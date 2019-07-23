@@ -7,14 +7,16 @@ plugins {
 group = "org.jaram"
 version = "1.0-SNAPSHOT"
 
-subprojects {
-    apply {
-        plugin("kotlin")
-    }
-
+allprojects {
     repositories {
         mavenCentral()
         jcenter()
+    }
+}
+
+subprojects {
+    apply {
+        plugin("kotlin")
     }
 
     dependencies {
@@ -38,4 +40,21 @@ subprojects {
     tasks.withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
     }
+}
+
+val childJars by configurations.creating
+
+dependencies {
+    subprojects.forEach {
+        childJars(project(it.path))
+    }
+}
+
+tasks.withType<Jar> {
+    archiveFileName.set("jubaky.jar")
+    manifest {
+        attributes["Main-Class"] = "org.jaram.jubaky.MainKt"
+    }
+    dependsOn(childJars)
+    from(childJars.map { if (it.isDirectory) it else zipTree(it) })
 }
