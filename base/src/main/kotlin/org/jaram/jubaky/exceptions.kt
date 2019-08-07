@@ -111,3 +111,10 @@ class QueryEmptyResultException(
     cause = cause,
     message = cause?.message ?: ""
 )
+
+class JenkinsServerException(message: String, httpStatus: Int, cause: Throwable? = null) : ApiException(
+    code = 10,
+    message = message,
+    httpStatus = httpStatus,
+    cause = cause
+)

@@ -9,7 +9,9 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import org.jaram.jubaky.ext.getInt
+import org.jaram.jubaky.presenter.router.dev
 import org.jaram.jubaky.presenter.router.user
+import org.jaram.jubaky.service.JenkinsService
 import org.jaram.jubaky.service.UserService
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -17,7 +19,8 @@ import java.util.concurrent.TimeUnit
 
 class JubakyServer(
     private val properties: Properties,
-    userService: UserService
+    userService: UserService,
+    jenkinsService: JenkinsService
 ) {
 
     val port = properties.getInt("SERVICE_PORT") ?: 8080
@@ -33,6 +36,7 @@ class JubakyServer(
             routing {
                 get("/health") { call.respondText("ok") }
                 route("/user") { user(userService) }
+                route("/dev") { dev(jenkinsService) }
             }
         }
     }
