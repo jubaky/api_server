@@ -35,6 +35,17 @@ subprojects {
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+")
 
         implementation("joda-time:joda-time:2.10.3")
+
+        val jjwtVersion = "0.10.6"
+        implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
+        implementation("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
+        implementation("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
+
+        val ktorVersion = "1.2.3"
+        implementation("io.ktor:ktor-auth-jwt:$ktorVersion")
+
+        // db
+        implementation("org.jetbrains.exposed:exposed:0.16.1")
     }
 
     tasks.withType<KotlinCompile> {

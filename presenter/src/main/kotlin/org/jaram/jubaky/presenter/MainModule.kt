@@ -1,8 +1,14 @@
 package org.jaram.jubaky.presenter
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.JWTVerifier
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.auth.Authentication
+import io.ktor.auth.jwt.JWTPrincipal
+import io.ktor.auth.jwt.jwt
 import io.ktor.features.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -17,9 +23,19 @@ import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.util.*
 
+
+private const val jwtIssuer: String = "jubaky.org"
+/* TODO: create new secret key */
+private const val secret: String = ""
+private val algorithm: Algorithm = Algorithm.HMAC512(secret)
+private val jwtRealm: String = "jubaky app"
+private val jwtAudience: String = "jubaky-audience"
+
 fun Application.serverModule() {
 
     val errorLogger = LoggerFactory.getLogger("kr.co.coinone.ErrorLogger")
+
+    val jwtVerifier: JWTVerifier = JWT.require(algorithm).withIssuer(jwtIssuer).build()
 
     install(XForwardedHeaderSupport)
 
@@ -71,6 +87,17 @@ fun Application.serverModule() {
             }
 
             call.respond(HttpStatusCode.fromValue(it.httpStatus), it.toResponse(locale))
+        }
+    }
+
+    // JWT Authentication Provider
+    install(Authentication) {
+        jwt(name = "jwtAuth") {
+            realm = jwtRealm
+            verifier(jwtVerifier)
+            validate { credential ->
+                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
+            }
         }
     }
 }
