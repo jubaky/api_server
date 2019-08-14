@@ -4,7 +4,7 @@ interface UserRepository {
 
     suspend fun registerUser(emailId: String, password: ByteArray, name: String)
 
-    suspend fun deleteUser(emailId: String, password: ByteArray)
+    suspend fun deleteUser(emailId: String, password: ByteArray): Boolean
 
     suspend fun isUser(emailId: String, password: ByteArray): Boolean
 

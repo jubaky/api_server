@@ -21,12 +21,12 @@ fun Route.user(userService: UserService) {
         val emailId: String = bodyParam("emailId")
         val password: ByteArray = bodyParam("password").toByteArray()
         val name: String = bodyParam("name")
-        val userData: List<Any> = userService.loginUser(emailId, password, name)
+        val userData: Map<String, Any> = userService.loginUser(emailId, password, name)
 
-        val responseData = mapOf("emailId" to userData[0], "name" to userData[1], "token" to userData[2])
+        val responseUserData: Map<String, Any?> = mapOf("emailId" to userData["emailId"], "name" to userData["name"], "token" to userData["token"])
 
         response(
-            responseData
+            responseUserData
         )
     }
 }

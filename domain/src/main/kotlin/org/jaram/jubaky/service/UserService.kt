@@ -12,31 +12,28 @@ class UserService(
 ) {
 
     suspend fun registerUser(emailId: String, password: ByteArray, name: String) {
-        if (userRepository.doubleCheckUser(emailId))
-            userRepository.registerUser(emailId, password, name)
-        else
+        if (!userRepository.doubleCheckUser(emailId))
             throw AlreadyExistedUserException()
+        userRepository.registerUser(emailId, password, name)
     }
 
     suspend fun deleteUser(emailId: String, password: ByteArray) {
-        if (!userRepository.isUser(emailId, password))
-            userRepository.deleteUser(emailId, password)
-        else if (!userRepository.doubleCheckUser(emailId))
+        if (!userRepository.doubleCheckUser(emailId))
             throw IncorrectPasswordException()
-        else
+        else if (!userRepository.deleteUser(emailId, password))
             throw NonExistedUserException()
     }
 
-    suspend fun loginUser(emailId: String, password: ByteArray, name: String): List<Any> {
+    suspend fun loginUser(emailId: String, password: ByteArray, name: String): Map<String, Any> {
         var token: String
-        val userInfo: List<Any>
+        val userInfo: Map<String, Any>
 
         if (userRepository.isUser(emailId, password))
             throw IncorrectEmailIdOrPasswordException()
 
         userRepository.updateLastLoginTime(emailId)
         token = tokenService.createToken(emailId, name)
-        userInfo = listOf(emailId, name, token)
+        userInfo = mapOf("emailId" to emailId, "name" to name, "token" to token)
 
         return userInfo
     }

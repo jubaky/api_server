@@ -10,8 +10,8 @@ class UserRepositoryImpl(
         userDao.createUser(emailId, password, name)
     }
 
-    override suspend fun deleteUser(emailId: String, password: ByteArray) {
-        userDao.removeUser(emailId, password)
+    override suspend fun deleteUser(emailId: String, password: ByteArray): Boolean {
+        return userDao.removeUser(emailId, password)
     }
 
     override suspend fun isUser(emailId: String, password: ByteArray): Boolean {

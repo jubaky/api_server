@@ -19,12 +19,10 @@ class UserDao(
         }
     }
 
-    suspend fun removeUser(emailId: String, password: ByteArray) {
-        db.execute {
-            Users.deleteWhere {
-                Users.emailId.eq(emailId) and Users.password.eq(password)
-            }
-        }
+    suspend fun removeUser(emailId: String, password: ByteArray): Boolean = db.execute {
+        Users.deleteWhere {
+            Users.emailId.eq(emailId) and Users.password.eq(password)
+        } > 0
     }
 
     suspend fun doubleCheckEmailId(emailId: String): Boolean = db.read {
