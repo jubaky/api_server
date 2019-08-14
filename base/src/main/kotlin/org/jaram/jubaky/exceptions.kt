@@ -147,3 +147,61 @@ class IncorrectEmailIdOrPasswordException(
     messageKr = "이메일 또는 비밀번호를 잘못 입력 하셨습니다.",
     messageEn = "You entered an incorrect e-mail or password."
 )
+
+// 100 ~ 199 : Jenkins API 오류
+fun createJenkinsApiStatusException(jenkinsHttpStatus: Int, cause: Throwable? = null): ApiException {
+    val resultException: ApiException
+
+    when (jenkinsHttpStatus) {
+        400 -> resultException = JenkinsApiBadRequestException(cause)
+        401 -> resultException = JenkinsApiUnauthorizedException(cause)
+        403 -> resultException = JenkinsApiForbiddenException(cause)
+        404 -> resultException = JenkinsApiNotFoundException(cause)
+        500 -> resultException = JenkinsApiInternalServerException(cause)
+        else -> resultException = JenkinsApiException(cause)
+    }
+
+    return resultException
+}
+
+class JenkinsApiException(cause: Throwable? = null) : ApiException(
+    code = 100,
+    messageKr = "젠킨스 API 에서 알 수 없는 오류가 발생하였습니다.",
+    messageEn = "Jenkins API error has occurred.",
+    cause = cause
+)
+
+class JenkinsApiBadRequestException(cause: Throwable? = null) : ApiException(
+    code = 101,
+    messageKr = "젠킨스 API 에서 오류가 발생하였습니다. (원인 : Bad Request)",
+    messageEn = "Jenkins API bad request error has occurred.",
+    cause = cause
+)
+
+class JenkinsApiUnauthorizedException(cause: Throwable? = null) : ApiException(
+    code = 102,
+    messageKr = "젠킨스 API 에서 오류가 발생하였습니다. (원인 : Authorization Error)",
+    messageEn = "Jenkins API authorization error has occurred.",
+    cause = cause
+)
+
+class JenkinsApiForbiddenException(cause: Throwable? = null) : ApiException(
+    code = 103,
+    messageKr = "젠킨스 API 에서 오류가 발생하였습니다. (원인 : Forbidden Error)",
+    messageEn = "Jenkins API forbidden error has occurred.",
+    cause = cause
+)
+
+class JenkinsApiNotFoundException(cause: Throwable? = null) : ApiException(
+    code = 104,
+    messageKr = "젠킨스 API 에서 오류가 발생하였습니다. (원인 : Not Found)",
+    messageEn = "Jenkins API 'Not Found' error has occurred.",
+    cause = cause
+)
+
+class JenkinsApiInternalServerException(cause: Throwable? = null) : ApiException(
+    code = 105,
+    messageKr = "젠킨스 API 에서 오류가 발생하였습니다. (원인 : Internal Server Error)",
+    messageEn = "Jenkins API internal server error has occurred.",
+    cause = cause
+)
