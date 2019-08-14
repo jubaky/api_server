@@ -111,3 +111,39 @@ class QueryEmptyResultException(
     cause = cause,
     message = cause?.message ?: ""
 )
+
+class AlreadyExistedUserException(
+    cause: Throwable? = null
+) : ApiException(
+    code = 11,
+    cause = cause,
+    messageKr = "이미 존재하는 이메일입니다.",
+    messageEn = "The e-mail already exists."
+)
+
+class NonExistedUserException(
+    cause: Throwable? = null
+) : ApiException(
+    code = 12,
+    cause = cause,
+    messageKr = "존재하지 않는 사용자입니다.",
+    messageEn = "User does not exist."
+)
+
+class IncorrectPasswordException(
+    cause: Throwable? = null
+) : ApiException(
+    code = 13,
+    cause = cause,
+    messageKr = "비밀번호를 잘못 입력 하셨습니다.",
+    messageEn = "You entered an incorrect password."
+)
+
+class IncorrectEmailIdOrPasswordException(
+    cause: Throwable? = null
+) : ApiException(
+    code = 14,
+    cause = cause,
+    messageKr = "이메일 또는 비밀번호를 잘못 입력 하셨습니다.",
+    messageEn = "You entered an incorrect e-mail or password."
+)
