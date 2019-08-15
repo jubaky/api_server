@@ -205,3 +205,45 @@ class JenkinsApiInternalServerException(cause: Throwable? = null) : ApiException
     messageEn = "Jenkins API internal server error has occurred.",
     cause = cause
 )
+
+// 200 ~ 299 : Kubernetes 오류
+fun createKubernetesApiException(message: String?, cause: Throwable? = null): ApiException {
+    val resultException: ApiException
+
+    when (message) {
+        "Conflict" -> resultException = KubernetesApiConflictException(cause)
+        "Bad Request" -> resultException = KubernetesApiBadRequestException(cause)
+        "Not Found" -> resultException = KubernetesApiNotFoundException(cause)
+        else -> resultException = KubernetesApiException(message ?: "Unknown", cause)
+    }
+
+    return resultException
+}
+
+class KubernetesApiException(message: String, cause: Throwable? = null) : ApiException(
+    code = 200,
+    messageKr = "쿠버네티스 API 에서 알 수 없는 오류가 발생하였습니다. (원인 : $message)",
+    messageEn = "Kubernetes API error has occurred. (Cause : $message)",
+    cause = cause
+)
+
+class KubernetesApiBadRequestException(cause: Throwable? = null) : ApiException(
+    code = 201,
+    messageKr = "쿠버네티스 API 에서 오류가 발생하였습니다. (원인 : Bad Request)",
+    messageEn = "Kubernetes API bad request error has occurred.",
+    cause = cause
+)
+
+class KubernetesApiNotFoundException(cause: Throwable? = null) : ApiException(
+    code = 204,
+    messageKr = "쿠버네티스 API 에서 오류가 발생하였습니다. (원인 : Not Found)",
+    messageEn = "Kubernetes API 'Not Found' error has occurred.",
+    cause = cause
+)
+
+class KubernetesApiConflictException(cause: Throwable? = null) : ApiException(
+    code = 205,
+    messageKr = "쿠버네티스 API 에서 오류가 발생하였습니다. (원인: Conflict)",
+    messageEn = "Kubernetes API conflict error has occurred.",
+    cause = cause
+)
