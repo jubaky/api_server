@@ -1,6 +1,7 @@
 package org.jaram.jubaky.service
 
 import org.jaram.jubaky.protocol.DeployInfo
+import org.jaram.jubaky.protocol.NamespaceDeployState
 import org.jaram.jubaky.repository.DeployRepository
 import org.jaram.jubaky.repository.KubernetesRepository
 
@@ -21,7 +22,7 @@ class DeployService(
 
     }
 
-    fun getDeployStatus(applicationId: Int) {
-
+    fun getDeployStatus(applicationId: Int): List<NamespaceDeployState> {
+        return emptyList()
     }
 }

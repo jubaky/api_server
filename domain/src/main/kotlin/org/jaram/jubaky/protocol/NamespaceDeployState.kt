@@ -2,5 +2,5 @@ package org.jaram.jubaky.protocol
 
 data class NamespaceDeployState(
     val namespace: String,
-    val 
+    val info: DeployInfo
 )
