@@ -11,4 +11,5 @@ object Users : IntIdTable("user") {
     val createTime: Column<DateTime> = datetime("create_time").default(DateTime.now())
     val lastLoginTime: Column<DateTime?> = datetime("last_login_time").nullable()
     val isDisabled: Column<Boolean> = bool("is_disable").default(false)
+    val teamId: Column<Int> = integer("team_id").references(Team.id)
 }
