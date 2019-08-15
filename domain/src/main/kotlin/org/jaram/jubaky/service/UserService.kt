@@ -1,10 +1,10 @@
 package org.jaram.jubaky.service
 
 import org.jaram.jubaky.AlreadyExistedUserException
-import org.jaram.jubaky.NonExistedUserException
 import org.jaram.jubaky.IncorrectEmailIdOrPasswordException
 import org.jaram.jubaky.IncorrectPasswordException
 import org.jaram.jubaky.repository.UserRepository
+import org.joda.time.DateTime
 
 class UserService(
     private val userRepository: UserRepository,
@@ -12,29 +12,34 @@ class UserService(
 ) {
 
     suspend fun registerUser(emailId: String, password: ByteArray, name: String) {
-        if (!userRepository.doubleCheckUser(emailId))
+        if (userRepository.isDuplicatedEmail(emailId)) {
             throw AlreadyExistedUserException()
+        }
+
         userRepository.registerUser(emailId, password, name)
     }
 
+    suspend fun deleteUser(userId: Int) {
+        userRepository.deleteUser(userId)
+    }
+
     suspend fun deleteUser(emailId: String, password: ByteArray) {
-        if (!userRepository.doubleCheckUser(emailId))
+        if (!userRepository.isValidCredentials(emailId, password)) {
             throw IncorrectPasswordException()
-        else if (!userRepository.deleteUser(emailId, password))
-            throw NonExistedUserException()
+        }
+
+        userRepository.deleteUser(emailId)
     }
 
     suspend fun loginUser(emailId: String, password: ByteArray, name: String): Map<String, Any> {
-        var token: String
-        val userInfo: Map<String, Any>
-
-        if (userRepository.isUser(emailId, password))
+        if (!userRepository.isValidCredentials(emailId, password)) {
             throw IncorrectEmailIdOrPasswordException()
+        }
 
-        userRepository.updateLastLoginTime(emailId)
-        token = tokenService.createToken(emailId, name)
-        userInfo = mapOf("emailId" to emailId, "name" to name, "token" to token)
+        userRepository.updateLastLoginTime(emailId, DateTime.now())
 
-        return userInfo
+        val token = tokenService.createToken(emailId, name)
+
+        return mapOf("emailId" to emailId, "name" to name, "token" to token)
     }
 }

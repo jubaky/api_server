@@ -1,6 +1,8 @@
 package org.jaram.jubaky.jenkins.repository
 
+import com.cdancy.jenkins.rest.JenkinsClient
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.offbytwo.jenkins.JenkinsServer
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.jaram.jubaky.createJenkinsApiStatusException
@@ -14,6 +16,7 @@ import org.jaram.jubaky.repository.JenkinsRepository
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Element
 import java.io.File
+import java.net.URI
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
@@ -28,7 +31,15 @@ class JenkinsRepositoryImpl(
     private val jobConfigFilePath = javaClass.classLoader.getResource("job_config_default.xml")!!.file
 
     override suspend fun startPipeline(pipeline: Pipeline) {
+        val server = JenkinsServer(URI("http://localhost:8080/jenkins"), "admin", "password")
+        server.createJob("jobName", "configXML")
 
+        val client = JenkinsClient.builder()
+            .endPoint("http://127.0.0.1:8080") // Optional. Defaults to http://127.0.0.1:8080
+            .credentials("admin:password") // Optional.
+            .build()
+
+        client.api().jobsApi().create(null, "jobName", "configXML")
     }
 
     /**
@@ -72,7 +83,8 @@ class JenkinsRepositoryImpl(
             val lastUnsuccessfulBuildMap = data?.get("lastUnsuccessfulBuild") as Map<*, *>?
 
             val propertyList = data?.get("property") as List<Map<*, *>>?
-            val parameterObject = propertyList?.find { m: Map<*, *> -> m["_class"] == "hudson.model.ParametersDefinitionProperty" }
+            val parameterObject =
+                propertyList?.find { m: Map<*, *> -> m["_class"] == "hudson.model.ParametersDefinitionProperty" }
             val parameterListOuter = parameterObject?.get("parameterDefinitions") as List<Map<*, *>>?
 
             val buildArgumentList = mutableListOf<BuildArgument>()
@@ -199,7 +211,7 @@ class JenkinsRepositoryImpl(
         if (response.isSuccessful) {
             return JobLog(
                 jobName = jobName,
-                log = response.body()?: ""
+                log = response.body() ?: ""
             )
         } else {
             throw createJenkinsApiStatusException(response.code())
@@ -264,7 +276,7 @@ class JenkinsRepositoryImpl(
     override suspend fun buildWithParameters(jobName: String, buildArgumentList: List<BuildArgument>) {
         val buildArgumentMap = mutableMapOf<String, String>()
         buildArgumentList.map {
-            buildArgumentMap[it.name?: ""] = it.defaultValue?: ""
+            buildArgumentMap[it.name ?: ""] = it.defaultValue ?: ""
         }
 
         val request = jenkinsClientWithJson.buildWithParameters(
@@ -328,7 +340,8 @@ class JenkinsRepositoryImpl(
         keepDependencies.textContent = configXmlData.keepDependencies
 
         // @Parameters
-        val parametersDefinitionElement = root.getElementsByTagName("hudson.model.ParametersDefinitionProperty").item(0) as Element
+        val parametersDefinitionElement =
+            root.getElementsByTagName("hudson.model.ParametersDefinitionProperty").item(0) as Element
 
         val parameterDefinitionsOld = parametersDefinitionElement.getElementsByTagName("parameterDefinitions").item(0)
         parametersDefinitionElement.removeChild(parameterDefinitionsOld)
@@ -391,8 +404,14 @@ class JenkinsRepositoryImpl(
         transformer.transform(domSource, streamResult)
     }
 
-    private fun buildShellCommand(beforeCommand: String, afterCommand: String, dockerArgument: DockerArgument, buildArgumentList: List<BuildArgument>?): String {
-        val dockerImageValue = "${dockerArgument.imageUsername}/${dockerArgument.imageName}:${dockerArgument.imageVersion}"
+    private fun buildShellCommand(
+        beforeCommand: String,
+        afterCommand: String,
+        dockerArgument: DockerArgument,
+        buildArgumentList: List<BuildArgument>?
+    ): String {
+        val dockerImageValue =
+            "${dockerArgument.imageUsername}/${dockerArgument.imageName}:${dockerArgument.imageVersion}"
         var buildParameterValue = ""
 
         if (buildArgumentList != null) {
