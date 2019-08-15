@@ -2,12 +2,14 @@ package org.jaram.jubaky.db.dao
 
 import org.jaram.jubaky.db.DB
 import org.jaram.jubaky.db.table.Users
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.update
 import org.joda.time.DateTime
 
-class UserDao(
-    private val db: DB
-) {
+class UserDao(private val db: DB) {
+
     suspend fun createUser(emailId: String, password: ByteArray, name: String) {
         db.execute {
             Users.insert {
@@ -19,29 +21,57 @@ class UserDao(
         }
     }
 
-    suspend fun removeUser(emailId: String, password: ByteArray): Boolean = db.execute {
-        Users.deleteWhere {
-            Users.emailId.eq(emailId) and Users.password.eq(password)
-        } > 0
+    suspend fun updateLastLoginTime(emailId: String, time: DateTime) {
+        db.execute {
+            Users.update(
+                where = { Users.emailId eq emailId },
+                body = {
+                    it[this.lastLoginTime] = time
+                }
+            )
+        }
     }
 
-    suspend fun doubleCheckEmailId(emailId: String): Boolean = db.read {
-        Users.slice(Users.emailId).select {
+    suspend fun disableUser(userId: Int) {
+        db.execute {
+            val emailId = Users.slice(Users.emailId).select { Users.id eq userId }.first()
+
+            Users.update(
+                where = { Users.id eq userId },
+                body = {
+                    it[this.emailId] = "deactivate-${System.currentTimeMillis()}-$emailId"
+                    it[this.password] = byteArrayOf()
+                    it[this.name] = ""
+                    it[this.isDisabled] = true
+                }
+            )
+        }
+    }
+
+    suspend fun disableUser(emailId: String) {
+        db.execute {
+            Users.update(
+                where = { Users.emailId eq emailId },
+                body = {
+                    it[this.emailId] = "deactivate-${System.currentTimeMillis()}-$emailId"
+                    it[this.password] = byteArrayOf()
+                    it[this.name] = ""
+                    it[this.isDisabled] = true
+                }
+            )
+        }
+    }
+
+    suspend fun isDuplicatedEmail(emailId: String) = db.read {
+        !Users.slice(Users.emailId).select {
             Users.emailId.eq(emailId)
         }.empty()
     }
 
-    suspend fun isUser(emailId: String, password: ByteArray): Boolean = db.read {
-        Users.slice(Users.emailId, Users.password).select {
-            Users.emailId.eq(emailId) and Users.password.eq(password)
-        }.empty()
-    }
-
-    suspend fun updateLastLoginTime(emailId: String) {
-        db.execute {
-            Users.update({ Users.emailId.eq(emailId) }) {
-                it[this.lastLoginTime] = DateTime.now()
-            }
-        }
+    suspend fun isValidCredentials(emailId: String, password: ByteArray) = db.read {
+        Users.slice(Users.password).select {
+            (Users.isDisabled eq false)
+                .and(Users.emailId eq emailId)
+        }.firstOrNull()?.get(Users.password)?.contentEquals(password) == true
     }
 }
