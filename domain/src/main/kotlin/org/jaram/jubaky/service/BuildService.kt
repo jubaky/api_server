@@ -1,5 +1,6 @@
 package org.jaram.jubaky.service
 
+import org.jaram.jubaky.protocol.BuildInfo
 import org.jaram.jubaky.repository.BuildRepository
 import org.jaram.jubaky.repository.JenkinsRepository
 
@@ -8,12 +9,12 @@ class BuildService(
     private val jenkinsRepository: JenkinsRepository
 ) {
 
-    fun getRecentBuildList(applicationId: Int, count: Int, branch: String? = null) {
-
+    fun getRecentBuildList(applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {
+        return emptyList()
     }
 
-    fun getBuildInfo(buildId: Int) {
-
+    fun getBuildLog(buildId: Int): String {
+        return ""
     }
 
     fun runBuild(applicationId: Int, branch: String) {

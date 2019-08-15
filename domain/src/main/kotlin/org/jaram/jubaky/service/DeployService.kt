@@ -1,5 +1,6 @@
 package org.jaram.jubaky.service
 
+import org.jaram.jubaky.protocol.DeployInfo
 import org.jaram.jubaky.repository.DeployRepository
 import org.jaram.jubaky.repository.KubernetesRepository
 
@@ -8,12 +9,12 @@ class DeployService(
     private val kubernetesRepository: KubernetesRepository
 ) {
 
-    fun getRecentDeployList(count: Int, namespace: String? = null) {
-
+    fun getRecentDeployList(count: Int, namespace: String? = null): List<DeployInfo> {
+        return emptyList()
     }
 
-    fun getDeployInfo(deployId: Int) {
-
+    fun getDeployLog(deployId: Int): String {
+        return ""
     }
 
     fun runDeploy(buildId: Int, namespace: String) {
