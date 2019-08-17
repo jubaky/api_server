@@ -21,7 +21,7 @@ interface JenkinsClientWithJson {
     @GET("/job/{jobName}/{build_number}/api/json")
     fun getJobSpecInfo(
         @Path("jobName") jobName: String,
-        @Path("build_number") buildNumber: String
+        @Path("build_number") buildNumber: Int
     ): Deferred<Response<Map<String, Any>>>
 
     @Headers("Content-Type: text/xml")

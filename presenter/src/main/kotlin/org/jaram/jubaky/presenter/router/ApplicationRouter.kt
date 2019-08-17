@@ -74,14 +74,39 @@ fun Route.app(
                 }
 
                 post("/build") {
-                    response(buildService.runBuild(pathParam("applicationId").toInt(), pathParam("branchName")))
+                    // Docker build arguments
+                    val buildArgNameList = bodyParamListSafe("docker_argument_name")
+                    val buildArgDefaultValueList = bodyParamListSafe("docker_argument_default_value")
+                    val buildArgDescriptionList = bodyParamListSafe("docker_argument_description")
+
+                    val buildArgumentList = mutableListOf<BuildArgument>()
+
+                    if (buildArgNameList.size == buildArgDefaultValueList.size && buildArgNameList.size == buildArgDescriptionList.size) {
+                        for (i in 0 until buildArgNameList.size) {
+                            val buildArgument = BuildArgument(
+                                name = buildArgNameList[i],
+                                defaultValue = buildArgDefaultValueList[i],
+                                description = buildArgDescriptionList[i]
+                            )
+
+                            buildArgumentList.add(buildArgument)
+                        }
+                    }
+
+                    response(
+                        buildService.runBuild(
+                            pathParam("applicationId").toInt(),
+                            pathParam("branchName"),
+                            buildArgumentList
+                        )
+                    )
                 }
 
                 get("/deploy") {
                     response(deployService.getDeployStatus(pathParam("applicationId").toInt()))
                 }
 
-                get("/log") {
+                get("/{buildId}/log") {
                     response(buildService.getBuildLog(pathParam("buildId").toInt()))
                 }
             }

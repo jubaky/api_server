@@ -11,8 +11,16 @@ val ServiceModule = module {
     single<JenkinsService>()
     single<KubernetesService>()
     single<ApplicationService>()
-    single<BuildService>()
     single<DeployService>()
+
+    single {
+        BuildService(
+            get(),
+            get(),
+            getInt("jenkins.build.startDelayTime")!!,
+            getInt("jenkins.build.intervalDelayTime")!!
+        )
+    }
 
     single {
         TokenService(

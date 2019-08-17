@@ -11,12 +11,13 @@ data class JobSpecProtocol(
     val remoteUrlsList: List<String>?,
     val building: Boolean?,
     val description: String?,
-    val duration: Int?,
+    val buildDuration: Int?,
+    val inQueueDuration: Int?,
     val estimatedDuration: Int?,
     val queueId: Int?,
     val keepLog: Boolean?,
     val result: String?,
-    val timestamp: Long?
+    val createTimestamp: Long
 ) {
     fun toDomainModel() = JobSpec(
         name = name,
@@ -26,9 +27,10 @@ data class JobSpecProtocol(
         remoteUrlsList = remoteUrlsList,
         building = building,
         description = description,
-        duration = duration,
-        estimatedDuration = estimatedDuration,
+        buildDuration = buildDuration ?: 0,
+        inQueueDuration = inQueueDuration ?: 0,
+        estimatedDuration = estimatedDuration ?: 0,
         result = result,
-        timestamp = timestamp
+        createTimestamp = createTimestamp
     )
 }
