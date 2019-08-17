@@ -4,12 +4,13 @@ import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
+import org.jaram.jubaky.domain.jenkins.BuildArgument
 import org.jaram.jubaky.presenter.ext.*
 import org.jaram.jubaky.service.ApplicationService
 import org.jaram.jubaky.service.BuildService
 import org.jaram.jubaky.service.DeployService
 
-fun Route.application(
+fun Route.app(
     applicationService: ApplicationService,
     buildService: BuildService,
     deployService: DeployService
@@ -78,6 +79,10 @@ fun Route.application(
 
                 get("/deploy") {
                     response(deployService.getDeployStatus(pathParam("applicationId").toInt()))
+                }
+
+                get("/log") {
+                    response(buildService.getBuildLog(pathParam("buildId").toInt()))
                 }
             }
         }

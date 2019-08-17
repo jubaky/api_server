@@ -2,10 +2,7 @@ package org.jaram.jubaky.module
 
 import org.jaram.jubaky.ext.getInt
 import org.jaram.jubaky.ext.getString
-import org.jaram.jubaky.service.JenkinsService
-import org.jaram.jubaky.service.KubernetesService
-import org.jaram.jubaky.service.TokenService
-import org.jaram.jubaky.service.UserService
+import org.jaram.jubaky.service.*
 import org.koin.dsl.module
 import org.koin.experimental.builder.single
 
@@ -13,6 +10,9 @@ val ServiceModule = module {
     single<UserService>()
     single<JenkinsService>()
     single<KubernetesService>()
+    single<ApplicationService>()
+    single<BuildService>()
+    single<DeployService>()
 
     single {
         TokenService(
