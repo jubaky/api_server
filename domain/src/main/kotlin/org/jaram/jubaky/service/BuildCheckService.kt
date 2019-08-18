@@ -47,6 +47,9 @@ class BuildCheckService(
                         BuildStatus.ABORTED -> abortedBuildIdxList.add(progressBuildList.indexOf(build))
                         BuildStatus.SUCCESS -> successBuildIdxList.add(progressBuildList.indexOf(build))
                         BuildStatus.FAILURE -> failureBuildIdxList.add(progressBuildList.indexOf(build))
+                        BuildStatus.PENDING -> {}
+                        BuildStatus.PROGRESS -> {}
+                        BuildStatus.UNKNOWN -> {}  // Throw an Exception ?
                     }
 
                     progressBuildList[i] = Build(

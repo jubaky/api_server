@@ -22,6 +22,13 @@ val ServiceModule = module {
     }
 
     single {
+        DeployCheckService(
+            intervalDelayTime = getInt("kubernetes.deploy.intervalDelayTime") ?: 1000,
+            intervalCheckHealthTime = getInt("kubernetes.deploy.intervalCheckHealthTime") ?: 60000
+        )
+    }
+
+    single {
         TokenService(
             getString("token.jubaky.jwtIssuer")!!,
             getString("token.jubaky.secret")!!,

@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit
 class JubakyServer(
     private val properties: Properties,
     private val buildCheckService: BuildCheckService,
+    private val deployCheckService: DeployCheckService,
     userService: UserService,
     tokenService: TokenService,
     jenkinsService: JenkinsService,
@@ -58,6 +59,12 @@ class JubakyServer(
         buildCheckService.runPendingBuildCheck()
         logger.info("Pending build checker is started")
         buildCheckService.runCheckHealth()
+        logger.info("Build health checker is started")
+
+        deployCheckService.runDeployCheck()
+        logger.info("Deploy checker is started")
+        deployCheckService.runCheckHealth()
+        logger.info("Deploy health checker is started")
 
         server.start(wait = true)
     }
@@ -70,5 +77,11 @@ class JubakyServer(
         buildCheckService.stopPendingBuildCheck()
         logger.info("Pending build checker is stopped")
         buildCheckService.stopCheckHealth()
+        logger.info("Build health checker is stopped")
+
+        deployCheckService.stopDeployCheck()
+        logger.info("Deploy checker is stopped")
+        deployCheckService.stopCheckHealth()
+        logger.info("Deploy health checker is stopped")
     }
 }

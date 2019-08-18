@@ -87,6 +87,10 @@ class KubernetesService(
         return kubernetesRepository.getPodList(namespace)
     }
 
+    suspend fun getPodLog(podName: String, namespace: String): String {
+        return kubernetesRepository.getPodLog(podName, namespace)
+    }
+
     suspend fun createPod(yaml: String, namespace: String): Pod {
         return kubernetesRepository.createPod(yaml, namespace)
     }

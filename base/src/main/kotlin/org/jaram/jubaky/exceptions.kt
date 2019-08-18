@@ -253,3 +253,15 @@ class KubernetesApiConflictException(cause: Throwable? = null) : ApiException(
     messageEn = "Kubernetes API conflict error has occurred.",
     cause = cause
 )
+
+class KubernetesBuildDuplicationException : ApiException(
+    code = 210,
+    messageKr = "하나의 어플리케이션은 하나의 배포만 대기할 수 있습니다.",
+    messageEn = "An application can only wait for just one deployment."
+)
+
+class KuberenetesObjectNotFoundException : ApiException(
+    code = 211,
+    messageKr = "알 수 없는 쿠버네티스 오브젝트 형식입니다.",
+    messageEn = "It is an unknown Kubernetes object type."
+)

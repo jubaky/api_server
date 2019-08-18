@@ -481,6 +481,25 @@ open class KubernetesApi(configFile: File)  {
         }
     }
 
+    fun getPodLog(
+        podName: String,
+        namespace: String? = "default",
+        container: String? = null,
+        follow: Boolean? = null,
+        limitBytes: Int? = null,
+        pretty: String? = null,
+        previous: Boolean? = null,
+        sinceSeconds: Int? = null,
+        tailLines: Int? = null,
+        timestamps: Boolean? = null
+    ): String {
+        try {
+            return coreV1Api.readNamespacedPodLog(podName, namespace, container, follow, limitBytes, pretty, previous, sinceSeconds, tailLines, timestamps)
+        } catch (e: Exception) {
+            throw throw createKubernetesApiException(e.message, e.cause)
+        }
+    }
+
     fun createPod(
         namespace: String? = "default",
         pod: V1Pod,
