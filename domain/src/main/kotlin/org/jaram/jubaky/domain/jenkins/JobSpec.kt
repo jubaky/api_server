@@ -8,8 +8,9 @@ data class JobSpec(
     val remoteUrlsList: List<String>?,
     val building: Boolean?,
     val description: String?,
-    val duration: Int?,
-    val estimatedDuration: Int?,
+    val buildDuration: Int,
+    val inQueueDuration: Int,
+    val estimatedDuration: Int,
     val result: String?,
-    val timestamp: Long?
+    val createTimestamp: Long
 )

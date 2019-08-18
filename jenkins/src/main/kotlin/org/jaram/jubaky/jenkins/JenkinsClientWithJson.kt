@@ -21,7 +21,7 @@ interface JenkinsClientWithJson {
     @GET("/job/{jobName}/{build_number}/api/json")
     fun getJobSpecInfo(
         @Path("jobName") jobName: String,
-        @Path("build_number") buildNumber: String
+        @Path("build_number") buildNumber: Int
     ): Deferred<Response<Map<String, Any>>>
 
     @Headers("Content-Type: text/xml")
@@ -47,6 +47,9 @@ interface JenkinsClientWithJson {
         @Path("jobName") jobName: String,
         @QueryMap queries: Map<String, String>
     ): Deferred<Response<Void>>
+
+    @GET("/queue/api/json")
+    fun getPenddingBuildList(): Deferred<Response<Map<String, Any>>>
 
     @FormUrlEncoded
     @POST("/credentials/store/system/domain/_/createCredentials")

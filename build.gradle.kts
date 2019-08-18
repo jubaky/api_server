@@ -35,6 +35,8 @@ subprojects {
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+")
 
         implementation("joda-time:joda-time:2.10.3")
+
+        implementation("com.google.guava:guava:28.0-jre")
     }
 
     tasks.withType<KotlinCompile> {

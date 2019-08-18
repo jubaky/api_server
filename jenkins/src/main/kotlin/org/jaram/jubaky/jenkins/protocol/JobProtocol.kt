@@ -31,13 +31,13 @@ data class JobProtocol(
         buildable = buildable,
         concurrentBuild = concurrentBuild,
         healthScore = healthScore,
-        lastBuildNumber = lastBuildNumber,
-        lastCompletedBuildNumber = lastCompletedBuildNumber,
-        lastFailedBuildNumber = lastFailedBuildNumber,
-        lastStableBuildNumber = lastStableBuildNumber,
-        lastSuccessfulBuildNumber = lastSuccessfulBuildNumber,
-        lastUnstableBuildNumber = lastUnstableBuildNumber,
-        lastUnsuccessfulBuildNumber = lastUnsuccessfulBuildNumber,
+        lastBuildNumber = lastBuildNumber ?: 0,
+        lastCompletedBuildNumber = lastCompletedBuildNumber ?: 0,
+        lastFailedBuildNumber = lastFailedBuildNumber ?: 0,
+        lastStableBuildNumber = lastStableBuildNumber ?: 0,
+        lastSuccessfulBuildNumber = lastSuccessfulBuildNumber ?: 0,
+        lastUnstableBuildNumber = lastUnstableBuildNumber ?: 0,
+        lastUnsuccessfulBuildNumber = lastUnsuccessfulBuildNumber ?: 0,
         buildArgumentList = buildArgumentList
     )
 }

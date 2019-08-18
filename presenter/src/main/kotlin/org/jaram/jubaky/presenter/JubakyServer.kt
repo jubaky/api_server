@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 
 class JubakyServer(
     private val properties: Properties,
+    private val buildCheckService: BuildCheckService,
     userService: UserService,
     tokenService: TokenService,
     jenkinsService: JenkinsService,
@@ -52,10 +53,18 @@ class JubakyServer(
     fun start() {
         logger.info("Started : service_env=${properties["SERVICE_ENV"] ?: "local"}, service_port=$port")
 
+        buildCheckService.runBuildCheck()
+        buildCheckService.runPendingBuildCheck()
+        buildCheckService.runCheckHealth()
+
         server.start(wait = true)
     }
 
     fun stop() {
         server.stop(10, 30, TimeUnit.SECONDS)
+
+        buildCheckService.stopBuildCheck()
+        buildCheckService.stopPendingBuildCheck()
+        buildCheckService.stopCheckHealth()
     }
 }

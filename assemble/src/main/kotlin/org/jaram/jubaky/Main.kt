@@ -4,12 +4,10 @@ import org.jaram.jubaky.logger.KoinLogger
 import org.jaram.jubaky.module.*
 import org.jaram.jubaky.presenter.JubakyServer
 import org.koin.core.context.startKoin
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.dsl.onRelease
 import org.koin.experimental.builder.single
 import java.util.*
-import javax.sql.DataSource
 
 fun main() {
     val properties = Properties()

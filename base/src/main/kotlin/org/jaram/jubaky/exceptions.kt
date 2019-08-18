@@ -206,6 +206,12 @@ class JenkinsApiInternalServerException(cause: Throwable? = null) : ApiException
     cause = cause
 )
 
+class JenkinsBuildDuplicationException : ApiException(
+    code = 110,
+    messageKr = "한 어플리케이션은 하나의 빌드만 대기할 수 있습니다.",
+    messageEn = "An application can only wait for just one build."
+)
+
 // 200 ~ 299 : Kubernetes 오류
 fun createKubernetesApiException(message: String?, cause: Throwable? = null): ApiException {
     val resultException: ApiException

@@ -12,32 +12,36 @@ class JenkinsService(
         jenkinsRepository.redirectGithubWebhook(headers, payload)
     }
 
-    suspend fun getJob(jobName: String): Job? {
-        return jenkinsRepository.getJob(jobName)
+    suspend fun getJob(jobName: String, branchName: String): Job {
+        return jenkinsRepository.getJob(jobName, branchName)
     }
 
-    suspend fun getJobSpec(jobName: String, buildNumber: String): JobSpec? {
-        return jenkinsRepository.getJobSpec(jobName, buildNumber)
+    suspend fun getJobSpec(jobName: String, branchName: String, buildNumber: Int): JobSpec {
+        return jenkinsRepository.getJobSpec(jobName, branchName, buildNumber)
     }
 
-    suspend fun getJobLog(jobName: String, buildNumber: String): JobLog {
-        return jenkinsRepository.getJobLog(jobName, buildNumber)
-    }
-
-    suspend fun buildWithParameters(jobName: String, buildArgumentList: List<BuildArgument>) {
-        jenkinsRepository.buildWithParameters(jobName, buildArgumentList)
+    suspend fun getJobLog(jobName: String, branchName: String, buildNumber: Int): JobLog {
+        return jenkinsRepository.getJobLog(jobName, branchName, buildNumber)
     }
 
     suspend fun createJob(jobName: String, configData: JobConfig) {
         jenkinsRepository.createJob(jobName, configData)
     }
 
-    suspend fun deleteJob(jobName: String) {
-        jenkinsRepository.deleteJob(jobName)
+    suspend fun deleteJob(jobName: String, branchName: String) {
+        jenkinsRepository.deleteJob(jobName, branchName)
     }
 
     suspend fun updateJob(jobName: String, configData: JobConfig) {
         jenkinsRepository.updateJob(jobName, configData)
+    }
+
+    suspend fun buildWithParameters(jobName: String, branchName: String, buildArgumentList: List<BuildArgument>) {
+        jenkinsRepository.buildWithParameters(jobName, branchName, buildArgumentList)
+    }
+
+    suspend fun getPendingBuildList(): List<String> {
+        return jenkinsRepository.getPendingBuildList()
     }
 
     suspend fun createCredentials(credentials: Credentials) {
