@@ -54,7 +54,9 @@ class JubakyServer(
         logger.info("Started : service_env=${properties["SERVICE_ENV"] ?: "local"}, service_port=$port")
 
         buildCheckService.runBuildCheck()
+        logger.info("Build checker is started")
         buildCheckService.runPendingBuildCheck()
+        logger.info("Pending build checker is started")
         buildCheckService.runCheckHealth()
 
         server.start(wait = true)
@@ -64,7 +66,9 @@ class JubakyServer(
         server.stop(10, 30, TimeUnit.SECONDS)
 
         buildCheckService.stopBuildCheck()
+        logger.info("Build checker is stopped")
         buildCheckService.stopPendingBuildCheck()
+        logger.info("Pending build checker is stopped")
         buildCheckService.stopCheckHealth()
     }
 }

@@ -208,7 +208,7 @@ class JenkinsApiInternalServerException(cause: Throwable? = null) : ApiException
 
 class JenkinsBuildDuplicationException : ApiException(
     code = 110,
-    messageKr = "한 어플리케이션은 하나의 빌드만 대기할 수 있습니다.",
+    messageKr = "하나의 어플리케이션은 하나의 빌드만 대기할 수 있습니다.",
     messageEn = "An application can only wait for just one build."
 )
 

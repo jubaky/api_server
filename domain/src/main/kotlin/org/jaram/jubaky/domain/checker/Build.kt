@@ -1,4 +1,4 @@
-package org.jaram.jubaky.domain.jenkins
+package org.jaram.jubaky.domain.checker
 
 import org.jaram.jubaky.enumuration.BuildStatus
 

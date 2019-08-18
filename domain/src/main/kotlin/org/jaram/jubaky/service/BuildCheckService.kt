@@ -5,7 +5,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.jaram.jubaky.domain.jenkins.Build
+import org.jaram.jubaky.JenkinsBuildDuplicationException
+import org.jaram.jubaky.domain.checker.Build
 import org.jaram.jubaky.enumuration.BuildStatus
 import org.jaram.jubaky.enumuration.toBuildStatus
 import org.jaram.jubaky.repository.JenkinsRepository
@@ -37,9 +38,10 @@ class BuildCheckService(
                 val successBuildIdxList = mutableListOf<Int>()
                 val failureBuildIdxList = mutableListOf<Int>()
 
-                progressBuildList.map { build ->
+                for (i in 0 until progressBuildList.size) {
+                    val build = progressBuildList[i]
                     val jobSpec = jenkinsRepository.getJobSpec(build.name, build.branch, build.buildNumber)
-                    val buildStatus = toBuildStatus(jobSpec.result)
+                    val buildStatus = toBuildStatus(jobSpec.result ?: "")
 
                     when (buildStatus) {
                         BuildStatus.ABORTED -> abortedBuildIdxList.add(progressBuildList.indexOf(build))
@@ -47,7 +49,7 @@ class BuildCheckService(
                         BuildStatus.FAILURE -> failureBuildIdxList.add(progressBuildList.indexOf(build))
                     }
 
-                    Build(
+                    progressBuildList[i] = Build(
                         name = build.name,
                         branch = build.branch,
                         buildNumber = build.buildNumber,
@@ -63,6 +65,10 @@ class BuildCheckService(
                  * Save data to DB
                  */
 
+                /**
+                 * @TODO
+                 * Deep clone and doing post
+                 */
                 buildEventBus.post(
                     mapOf(
                         "abortedBuildList" to abortedBuildList,
@@ -151,6 +157,7 @@ class BuildCheckService(
     }
 
     suspend fun checkBuildDuplication(jobName: String, branchName: String): Boolean {
+        var isDuplicated = false
         var isPending = false
         var isProgress = false
         val branchedJobName = jenkinsRepository.replaceNameWithBranch(jobName, branchName)
@@ -181,6 +188,11 @@ class BuildCheckService(
                 isProgress = true
         }
 
-        return isPending && isProgress
+        isDuplicated = isPending && isProgress
+
+        if (!isDuplicated)
+            return isDuplicated
+        else
+            throw JenkinsBuildDuplicationException()
     }
 }

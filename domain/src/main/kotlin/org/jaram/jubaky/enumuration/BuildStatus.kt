@@ -9,8 +9,8 @@ enum class BuildStatus {
     UNKNOWN;
 }
 
-fun toBuildStatus(status: String?): BuildStatus {
-    return when (status) {
+fun toBuildStatus(status: String): BuildStatus {
+    return when (status.toUpperCase()) {
         "ABORTED" -> BuildStatus.ABORTED
         "PENDING" -> BuildStatus.PENDING
         "PROGRESS" -> BuildStatus.PROGRESS

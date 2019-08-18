@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.offbytwo.jenkins.JenkinsServer
 import okhttp3.MediaType
 import okhttp3.RequestBody
-import org.jaram.jubaky.JenkinsBuildDuplicationException
 import org.jaram.jubaky.createJenkinsApiStatusException
+import org.jaram.jubaky.domain.checker.Build
 import org.jaram.jubaky.domain.jenkins.*
 import org.jaram.jubaky.enumuration.toBuildStatus
 import org.jaram.jubaky.jenkins.JenkinsClientWithJson
@@ -296,7 +296,7 @@ class JenkinsRepositoryImpl(
         }
 
         // Check if build is duplicated
-        if (buildCheckService.checkBuildDuplication(jobName, branchName)) throw JenkinsBuildDuplicationException()
+        buildCheckService.checkBuildDuplication(jobName, branchName)
 
         val request = jenkinsClientWithJson.buildWithParameters(
             branchedJobName,
