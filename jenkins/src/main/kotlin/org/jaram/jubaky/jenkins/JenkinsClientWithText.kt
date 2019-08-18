@@ -11,7 +11,7 @@ interface JenkinsClientWithText {
     @GET("/job/{job_name}/{build_number}/logText/progressiveText")
     fun getJobLog(
         @Path("job_name") jobName: String,
-        @Path("build_number") buildNumber: String,
+        @Path("build_number") buildNumber: Int,
         @Query("start") start: Int = 0
     ): Deferred<Response<String>>
 }

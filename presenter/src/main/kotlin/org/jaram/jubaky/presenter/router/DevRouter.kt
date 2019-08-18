@@ -41,39 +41,44 @@ fun Route.dev(jenkinsService: JenkinsService) {
          * @path
          * - jobName : String
          */
-        get("/{jobName}") {
+        get("/{jobName}/{branchName}") {
             val jobName = pathParam("jobName")
+            val branchName = pathParam("branchName")
 
             response(
-                jenkinsService.getJob(jobName)
+                jenkinsService.getJob(jobName, branchName)
             )
         }
 
         /**
          * @path
          * - jobName : String
+         * - branchName : String
          * - buildNumber : String
          */
-        get("/spec/{jobName}/{buildNumber}") {
+        get("/spec/{jobName}/{branchName}/{buildNumber}") {
             val jobName = pathParam("jobName")
-            val buildNumber = pathParam("buildNumber")
+            val branchName = pathParam("branchName")
+            val buildNumber = pathParam("buildNumber").toInt()
 
             response(
-                jenkinsService.getJobSpec(jobName, buildNumber)
+                jenkinsService.getJobSpec(jobName, branchName, buildNumber)
             )
         }
 
         /**
          * @path
          * - jobName : String
+         * - branchName : String
          * - buildNumber : String
          */
-        get("/log/{jobName}/{buildNumber}") {
+        get("/log/{jobName}/{branchName}/{buildNumber}") {
             val jobName = pathParam("jobName")
-            val buildNumber = pathParam("buildNumber")
+            val branchName = pathParam("branchName")
+            val buildNumber = pathParam("buildNumber").toInt()
 
             response(
-                jenkinsService.getJobLog(jobName, buildNumber).log
+                jenkinsService.getJobLog(jobName, branchName, buildNumber).log
             )
         }
 
@@ -155,11 +160,12 @@ fun Route.dev(jenkinsService: JenkinsService) {
          * @path
          * - jobName : String
          */
-        delete("/{jobName}") {
+        delete("/{jobName}/{branchName}") {
             val jobName = pathParam("jobName")
+            val branchName = pathParam("branchName")
 
             response(
-                jenkinsService.deleteJob(jobName)
+                jenkinsService.deleteJob(jobName, branchName)
             )
         }
 
@@ -240,6 +246,7 @@ fun Route.dev(jenkinsService: JenkinsService) {
         /**
          * @param
          * - job_name : String
+         * - branch_name : String
          *
          * < Docker Build Arguments >
          * - docker_argument_name : List<String> (optional)
@@ -248,6 +255,7 @@ fun Route.dev(jenkinsService: JenkinsService) {
          */
         post("/buildWithParameters") {
             val jobName = bodyParam("job_name")
+            val branchName = bodyParam("branch_param")
 
             // Docker build arguments
             val buildArgNameList = bodyParamListSafe("docker_argument_name")
@@ -269,9 +277,15 @@ fun Route.dev(jenkinsService: JenkinsService) {
             }
 
             response(
-                jenkinsService.buildWithParameters(jobName, buildArgumentList)
+                jenkinsService.buildWithParameters(jobName, branchName, buildArgumentList)
             )
         }
+    }
+
+    get("/pendingBuildList") {
+        response(
+            jenkinsService.getPendingBuildList()
+        )
     }
 
     route("/credentials") {

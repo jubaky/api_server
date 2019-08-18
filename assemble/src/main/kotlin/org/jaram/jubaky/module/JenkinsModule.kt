@@ -1,5 +1,6 @@
 package org.jaram.jubaky.module
 
+import org.jaram.jubaky.ext.getInt
 import org.jaram.jubaky.ext.getString
 import org.jaram.jubaky.jenkins.JenkinsClientFactory
 import org.jaram.jubaky.jenkins.repository.JenkinsRepositoryImpl
@@ -23,6 +24,10 @@ val JenkinsModule = module {
 
     single {
         get<JenkinsClientFactory>().createJenkinsClientWithText()
+    }
+
+    single {
+        getInt("jenkins.build.startDelayTime") ?: 200
     }
 
     singleBy<JenkinsRepository, JenkinsRepositoryImpl>()

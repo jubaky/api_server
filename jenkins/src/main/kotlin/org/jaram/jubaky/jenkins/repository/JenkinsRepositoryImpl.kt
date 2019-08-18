@@ -6,17 +6,19 @@ import com.offbytwo.jenkins.JenkinsServer
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.jaram.jubaky.createJenkinsApiStatusException
-import org.jaram.jubaky.domain.jenkins.Pipeline
+import org.jaram.jubaky.domain.checker.Build
 import org.jaram.jubaky.domain.jenkins.*
+import org.jaram.jubaky.enumuration.toBuildStatus
 import org.jaram.jubaky.jenkins.JenkinsClientWithJson
 import org.jaram.jubaky.jenkins.JenkinsClientWithText
 import org.jaram.jubaky.jenkins.protocol.JobProtocol
 import org.jaram.jubaky.jenkins.protocol.JobSpecProtocol
 import org.jaram.jubaky.repository.JenkinsRepository
-import org.slf4j.LoggerFactory
+import org.jaram.jubaky.service.BuildCheckService
 import org.w3c.dom.Element
 import java.io.File
 import java.net.URI
+import java.util.concurrent.TimeUnit
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
@@ -25,10 +27,16 @@ import javax.xml.transform.stream.StreamResult
 
 class JenkinsRepositoryImpl(
     private val jenkinsClientWithJson: JenkinsClientWithJson,
-    private val jenkinsClientWithText: JenkinsClientWithText
+    private val jenkinsClientWithText: JenkinsClientWithText,
+    private val buildCheckService: BuildCheckService,
+    private val startDelayTime: Int
 ) : JenkinsRepository {
 
     private val jobConfigFilePath = javaClass.classLoader.getResource("job_config_default.xml")!!.file
+
+    init {
+        buildCheckService.jenkinsRepository = this
+    }
 
     override suspend fun startPipeline(pipeline: Pipeline) {
         val server = JenkinsServer(URI("http://localhost:8080/jenkins"), "admin", "password")
@@ -57,15 +65,13 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun getJob(jobName: String): Job? {
-        val request = jenkinsClientWithJson.getJobInfo(jobName)
+    override suspend fun getJob(jobName: String, branchName: String): Job {
+        val branchedJobName = replaceNameWithBranch(jobName, branchName)
+        val request = jenkinsClientWithJson.getJobInfo(branchedJobName)
         val response = request.await()
 
         if (response.isSuccessful) {
             val data = response.body()
-
-            // Check if the job name is same with the github job name
-            if (jobName != data?.get("name") as String?) return null
 
             val healthReportList = data?.get("healthReport") as List<Map<*, *>>?
             var healthReportFirstMap = mapOf<Any, Any>() as Map<*, *>
@@ -148,8 +154,9 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun getJobSpec(jobName: String, buildNumber: String): JobSpec? {
-        val request = jenkinsClientWithJson.getJobSpecInfo(jobName, buildNumber)
+    override suspend fun getJobSpec(jobName: String, branchName: String, buildNumber: Int): JobSpec {
+        val branchedJobName = replaceNameWithBranch(jobName, branchName)
+        val request = jenkinsClientWithJson.getJobSpecInfo(branchedJobName, buildNumber)
         val response = request.await()
 
         if (response.isSuccessful) {
@@ -170,17 +177,20 @@ class JenkinsRepositoryImpl(
                 buildArgumentList.add(buildArgument)
             }
 
+            val timeDataObject = actionsList?.find { m: Map<*, *> -> m["_class"] == "jenkins.metrics.impl.TimeInQueueAction" }
+
             val fullDisplayName = data?.get("fullDisplayName") as String?
             val number = data?.get("number") as Int?
             val remoteUrlsList = data?.get("remoteUrls") as List<String>?
             val building = data?.get("building") as Boolean?
             val description = data?.get("description") as String?
-            val duration = data?.get("duration") as Int?
+            val buildDuration = timeDataObject?.get("buildingDurationMillis") as Int?
+            val inQueueDuration = timeDataObject?.get("blockedDurationMillis") as Int?
             val estimatedDuration = data?.get("estimatedDuration") as Int?
             val queueId = data?.get("queueId") as Int?
             val keepLog = data?.get("keepLog") as Boolean?
             val result = data?.get("result") as String?
-            val timestamp = data?.get("timestamp") as Long?
+            val createTimestamp = data?.get("timestamp") as Long
 
             val jobSpecInfo = JobSpecProtocol(
                 name = jobName,
@@ -190,12 +200,13 @@ class JenkinsRepositoryImpl(
                 remoteUrlsList = remoteUrlsList,
                 building = building,
                 description = description,
-                duration = duration,
+                buildDuration = buildDuration,
+                inQueueDuration = inQueueDuration,
                 estimatedDuration = estimatedDuration,
                 queueId = queueId,
                 keepLog = keepLog,
                 result = result,
-                timestamp = timestamp
+                createTimestamp = createTimestamp
             )
 
             return jobSpecInfo.toDomainModel()
@@ -204,8 +215,9 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun getJobLog(jobName: String, buildNumber: String): JobLog {
-        val request = jenkinsClientWithText.getJobLog(jobName, buildNumber)
+    override suspend fun getJobLog(jobName: String, branchName: String, buildNumber: Int): JobLog {
+        val branchedJobName = replaceNameWithBranch(jobName, branchName)
+        val request = jenkinsClientWithText.getJobLog(branchedJobName, buildNumber)
         val response = request.await()
 
         if (response.isSuccessful) {
@@ -219,8 +231,9 @@ class JenkinsRepositoryImpl(
     }
 
     override suspend fun createJob(jobName: String, configData: JobConfig) {
+        val branchedJobName = replaceNameWithBranch(jobName, configData.githubBranch)
         val file = File(jobConfigFilePath)
-        val updatedFile = File("/tmp/${jobName}_job_config_default.xml")
+        val updatedFile = File("/tmp/${branchedJobName}_job_config_default.xml")
 
         if (updatedFile.exists()) {
             updatedFile.delete()
@@ -231,7 +244,7 @@ class JenkinsRepositoryImpl(
         updateConfigXml(file, updatedFile, configData)
         val fileRequestBody = RequestBody.create(MediaType.parse("application/octet-stream"), updatedFile)
 
-        val request = jenkinsClientWithJson.createJob(jobName, fileRequestBody)
+        val request = jenkinsClientWithJson.createJob(branchedJobName, fileRequestBody)
         val response = request.await()
 
         updatedFile.delete()
@@ -241,8 +254,9 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun deleteJob(jobName: String) {
-        val request = jenkinsClientWithJson.deleteJob(jobName)
+    override suspend fun deleteJob(jobName: String, branchName: String) {
+        val branchedJobName = replaceNameWithBranch(jobName, branchName)
+        val request = jenkinsClientWithJson.deleteJob(branchedJobName)
         val response = request.await()
 
         if (!response.isSuccessful) {
@@ -251,8 +265,9 @@ class JenkinsRepositoryImpl(
     }
 
     override suspend fun updateJob(jobName: String, configData: JobConfig) {
+        val branchedJobName = replaceNameWithBranch(jobName, configData.githubBranch)
         val file = File(jobConfigFilePath)
-        val updatedFile = File("/tmp/${jobName}_job_config_default.xml")
+        val updatedFile = File("/tmp/${branchedJobName}_job_config_default.xml")
 
         if (updatedFile.exists()) {
             updatedFile.delete()
@@ -263,7 +278,7 @@ class JenkinsRepositoryImpl(
         updateConfigXml(file, updatedFile, configData)
         val fileRequestBody = RequestBody.create(MediaType.parse("application/octet-stream"), updatedFile)
 
-        val request = jenkinsClientWithJson.updateJob(jobName, fileRequestBody)
+        val request = jenkinsClientWithJson.updateJob(branchedJobName, fileRequestBody)
         val response = request.await()
 
         updatedFile.delete()
@@ -273,19 +288,59 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun buildWithParameters(jobName: String, buildArgumentList: List<BuildArgument>) {
+    override suspend fun buildWithParameters(jobName: String, branchName: String, buildArgumentList: List<BuildArgument>) {
+        val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val buildArgumentMap = mutableMapOf<String, String>()
         buildArgumentList.map {
             buildArgumentMap[it.name ?: ""] = it.defaultValue ?: ""
         }
 
+        // Check if build is duplicated
+        buildCheckService.checkBuildDuplication(jobName, branchName)
+
         val request = jenkinsClientWithJson.buildWithParameters(
-            jobName,
+            branchedJobName,
             buildArgumentMap
         )
         val response = request.await()
 
-        if (!response.isSuccessful) {
+        if (response.isSuccessful) {
+            TimeUnit.MILLISECONDS.sleep(startDelayTime.toLong())
+
+            val currentBuildNumber = getJob(jobName, branchName).lastBuildNumber + 1
+            val build = Build(
+                name = jobName,
+                branch = branchName,
+                buildNumber = currentBuildNumber,
+                status = toBuildStatus("PENDING")
+            )
+
+            buildCheckService.getPendingBuildList().add(build)
+        } else {
+            throw createJenkinsApiStatusException(response.code())
+        }
+    }
+
+    override suspend fun getPendingBuildList(): List<String> {
+        val request = jenkinsClientWithJson.getPenddingBuildList()
+        val response = request.await()
+
+        if (response.isSuccessful) {
+            val pendingBuildJobNameList = mutableListOf<String>()
+            val data = response.body()
+
+            val buildList = data?.get("items") as List<Map<String, Any>>
+
+            if (buildList.isNotEmpty()) {
+                buildList.map { build ->
+                    val task = build["task"] as Map<String, String>
+
+                    pendingBuildJobNameList.add(task["name"] ?: "")
+                }
+            }
+
+            return pendingBuildJobNameList
+        } else {
             throw createJenkinsApiStatusException(response.code())
         }
     }
@@ -388,6 +443,7 @@ class JenkinsRepositoryImpl(
         val shellCommand = shellCommandElement.getElementsByTagName("command").item(0)
 
         val builtShellCommand = buildShellCommand(
+            configXmlData.githubBranch,
             configXmlData.beforeCommand,
             configXmlData.afterCommand,
             configXmlData.dockerArgument,
@@ -404,14 +460,24 @@ class JenkinsRepositoryImpl(
         transformer.transform(domSource, streamResult)
     }
 
+    override fun replaceNameWithBranch(prefix: String, branchName: String): String {
+        return "${prefix}_$branchName".replace("/", "_")
+    }
+
     private fun buildShellCommand(
+        branchName: String,
         beforeCommand: String,
         afterCommand: String,
         dockerArgument: DockerArgument,
         buildArgumentList: List<BuildArgument>?
     ): String {
+        /**
+         * @TODO
+         * dev, test, prod 환경에 맞춰서 tag 핸들링하기
+         */
+        val branchedJobName = replaceNameWithBranch("branch", branchName)
         val dockerImageValue =
-            "${dockerArgument.imageUsername}/${dockerArgument.imageName}:${dockerArgument.imageVersion}"
+            "${dockerArgument.imageUsername}/${dockerArgument.imageName}:${branchedJobName}_${dockerArgument.imageVersion}"
         var buildParameterValue = ""
 
         if (buildArgumentList != null) {
