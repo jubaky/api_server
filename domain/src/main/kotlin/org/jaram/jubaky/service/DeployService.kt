@@ -7,27 +7,30 @@ import org.jaram.jubaky.protocol.DeployInfo
 import org.jaram.jubaky.protocol.NamespaceDeployState
 import org.jaram.jubaky.repository.DeployRepository
 import org.jaram.jubaky.repository.KubernetesRepository
+import org.jaram.jubaky.repository.TemplateRepository
 
 class DeployService(
     private val deployRepository: DeployRepository,
-    private val kubernetesRepository: KubernetesRepository
+    private val kubernetesRepository: KubernetesRepository,
+    private val templateRepository: TemplateRepository
 ) {
 
-    fun getRecentDeployList(count: Int, namespace: String? = null): List<DeployInfo> {
-        return emptyList()
+    suspend fun getRecentDeployList(count: Int, namespace: String? = null): List<DeployInfo> {
+        return deployRepository.getRecentDeployList(count, namespace)
     }
 
-    fun getDeployLog(deployId: Int): String {
-        val deployInfo = deployRepository.getDeployInfo(deployId)
+    suspend fun getDeployLog(deployId: Int): String {
+        val deployInfo = deployRepository.getDeployInfoByDeployId(deployId)
 
-        return kubernetesRepository.getPodLog(deployInfo.name, deployInfo.namespace)
+        return kubernetesRepository.getPodLog(deployInfo.applicationName, deployInfo.namespace)
     }
 
     suspend fun runDeploy(buildId: Int, namespace: String) {
-        val deployInfo = deployRepository.getDeployInfo(buildId)
+        val deployInfo = deployRepository.getDeployInfoByBuildId(buildId)
+        val templateInfo = templateRepository.getTemplateInfo(deployInfo.applicationName)
 
-        val yaml = deployInfo.yaml
-        val kind = deployInfo.kind
+        val yaml = templateInfo.yaml
+        val kind = templateInfo.kind.toString()
 
         when (toKind(kind)) {
             Kind.DAEMONSET -> kubernetesRepository.createDaemonSet(yaml, namespace)

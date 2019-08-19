@@ -53,6 +53,7 @@ class BuildCheckService(
                     }
 
                     progressBuildList[i] = Build(
+                        buildId = build.buildId,
                         name = build.name,
                         branch = build.branch,
                         buildNumber = build.buildNumber,
@@ -67,6 +68,19 @@ class BuildCheckService(
                 /**
                  * Save data to DB
                  */
+//                abortedBuildList.map { build ->
+//                    val jobInfo = jenkinsRepository.getJob(build.name, build.branch)
+//                    val applicationInfo = applicationRepository.getApplicationInfo(applicationName)
+//                    val user = userRepository.
+//
+//                    buildRepository.insertBuild(
+//                        branch = build.branch,
+//                        tag = build.name,
+//                        result = build.result,
+//                        application = applicationInfo.id,
+//                        creator =
+//                    )
+//                }
 
                 /**
                  * @TODO

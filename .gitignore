@@ -139,3 +139,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Config File
+k8s_config/

@@ -1,5 +1,16 @@
 package org.jaram.jubaky.repository
 
-interface BuildRepository {
+import org.jaram.jubaky.protocol.BuildInfo
+import org.joda.time.DateTime
 
+interface BuildRepository {
+    suspend fun createBuilds(branch: String, tag: String, result: String?, applicationId: Int, creatorId: Int, createTime: DateTime)
+
+    suspend fun getRecentBuildList(applicationId: Int, count: Int, branch: String?): List<BuildInfo>
+
+    suspend fun getBuildInfo(buildId: Int): BuildInfo
+
+    suspend fun getBuildInfo(applicationId: Int, branch: String): BuildInfo
+
+    suspend fun updateBuildStatus(buildId: Int, status: String, startTime: DateTime, endTime: DateTime)
 }

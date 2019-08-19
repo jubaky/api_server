@@ -10,4 +10,6 @@ val DBModule = module {
     single { DeployDao(get(named("jubaky-db"))) }
     single { GitDao(get(named("jubaky-db"))) }
     single { UserDao(get(named("jubaky-db"))) }
+    single { TemplateDao(get(named("jubaky-db"))) }
+    single { CredentialDao(get(named("jubaky-db"))) }
 }

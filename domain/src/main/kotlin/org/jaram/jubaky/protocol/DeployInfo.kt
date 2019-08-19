@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 
 data class DeployInfo(
     val id: Int,
+    val applicationName: String,
     val buildId: Int,
     val branch: String,
     val namespace: String,

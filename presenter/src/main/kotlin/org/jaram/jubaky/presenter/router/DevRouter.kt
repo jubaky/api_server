@@ -275,10 +275,10 @@ fun Route.dev(jenkinsService: JenkinsService) {
                     buildArgumentList.add(buildArgument)
                 }
             }
-
-            response(
-                jenkinsService.buildWithParameters(jobName, branchName, buildArgumentList)
-            )
+//
+//            response(
+//                jenkinsService.buildWithParameters(jobName, branchName, buildArgumentList)
+//            )
         }
     }
 
