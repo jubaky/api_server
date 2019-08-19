@@ -118,7 +118,7 @@ fun ExtensionsV1beta1Deployment.toDomainModel(): Deployment = Deployment(
         strategy = Deployment.DeploymentStrategy(
             rollingUpdate = Deployment.DeploymentRollingUpdate(
                 maxSurge = spec.strategy?.rollingUpdate?.maxSurge,
-                maxUnavailable = spec.strategy?.rollingUpdate?.maxUnavailable
+                maxUnavailable = spec.strategy?.rollingUpdate?.maxUnavailable?.toInt() ?: 0
             ),
             type = spec.strategy?.type
         ),
@@ -129,10 +129,10 @@ fun ExtensionsV1beta1Deployment.toDomainModel(): Deployment = Deployment(
         collisionCount = status.collisionCount,
         conditions = status.conditions?.map { condition -> condition.toDomainModel() },
         observedGeneration = status.observedGeneration,
-        readyReplicas = status.readyReplicas,
-        replicas = status.replicas,
-        unavailableReplicas = status.unavailableReplicas,
-        updatedReplicas = status.updatedReplicas
+        readyReplicas = status.readyReplicas ?: 0,
+        replicas = status.replicas ?: 0,
+        unavailableReplicas = status.unavailableReplicas ?: 0,
+        updatedReplicas = status.updatedReplicas ?: 0
     )
 )
 

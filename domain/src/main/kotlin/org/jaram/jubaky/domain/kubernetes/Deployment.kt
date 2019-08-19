@@ -23,10 +23,10 @@ data class Deployment(
         val collisionCount: Int?,
         val conditions: List<DeploymentCondition>?,
         val observedGeneration: Long?,
-        val readyReplicas: Int?,
-        val replicas: Int?,
-        val unavailableReplicas: Int?,
-        val updatedReplicas: Int?
+        val readyReplicas: Int,
+        val replicas: Int,
+        val unavailableReplicas: Int,
+        val updatedReplicas: Int
     )
 
     data class DeploymentStrategy(
@@ -45,6 +45,6 @@ data class Deployment(
 
     data class DeploymentRollingUpdate(
         val maxSurge: String?,
-        val maxUnavailable: String?
+        val maxUnavailable: Int?
     )
 }

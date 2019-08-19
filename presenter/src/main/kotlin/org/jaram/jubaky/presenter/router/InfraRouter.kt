@@ -198,6 +198,15 @@ fun Route.infra(kubernetesService: KubernetesService) {
             )
         }
 
+        get("/{namespace}/{name}") {
+            val podName = pathParam("name")
+            val namespaceName = pathParam("namespace", "default")
+
+            response(
+                kubernetesService.getPod(podName, namespaceName)
+            )
+        }
+
         post("/{namespace}") {
             val namespaceName = pathParam("namespace", "default")
             val yaml = bodyParam("yaml")

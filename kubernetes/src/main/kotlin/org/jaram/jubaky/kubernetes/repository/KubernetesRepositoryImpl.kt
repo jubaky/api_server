@@ -4,14 +4,22 @@ import io.kubernetes.client.models.*
 import io.kubernetes.client.util.Yaml
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jaram.jubaky.domain.checker.toDeploy
 import org.jaram.jubaky.domain.kubernetes.*
+import org.jaram.jubaky.enumuration.DeployStatus
 import org.jaram.jubaky.kubernetes.KubernetesApi
 import org.jaram.jubaky.kubernetes.toDomainModel
 import org.jaram.jubaky.repository.KubernetesRepository
+import org.jaram.jubaky.service.DeployCheckService
 
 class KubernetesRepositoryImpl(
+    private val deployCheckService: DeployCheckService,
     private val api: KubernetesApi
 ) : KubernetesRepository {
+
+    init {
+        deployCheckService.kubernetesRepository = this
+    }
 
     override suspend fun getDaemonSet(daemonSetName: String, namespace: String): DaemonSet = withContext(Dispatchers.IO) {
         api.getDaemonSet(daemonSetName, namespace).toDomainModel()
@@ -50,11 +58,23 @@ class KubernetesRepositoryImpl(
     }
 
     override suspend fun createDeployment(yaml: String, namespace: String): Deployment = withContext(Dispatchers.IO) {
-        api.createDeployment(namespace, Yaml.load(yaml) as ExtensionsV1beta1Deployment).toDomainModel()
+        val deployment = api.createDeployment(namespace, Yaml.load(yaml) as ExtensionsV1beta1Deployment).toDomainModel()
+        val deploy = toDeploy(deployment, DeployStatus.PROGRESS)
+
+        if (!deployCheckService.checkDeployDuplication(deploy))
+            deployCheckService.getProgressDeployList().add(deploy)
+
+        deployment
     }
 
     override suspend fun replaceDeployment(name: String, yaml: String, namespace: String): Deployment = withContext(Dispatchers.IO) {
-        api.replaceDeployment(name, namespace, Yaml.load(yaml) as ExtensionsV1beta1Deployment).toDomainModel()
+        val deployment = api.replaceDeployment(name, namespace, Yaml.load(yaml) as ExtensionsV1beta1Deployment).toDomainModel()
+        val deploy = toDeploy(deployment, DeployStatus.PROGRESS)
+
+        if (!deployCheckService.checkDeployDuplication(deploy))
+            deployCheckService.getProgressDeployList().add(deploy)
+
+        deployment
     }
 
     override suspend fun deleteDeployment(deploymentName: String, namespace: String) = withContext(Dispatchers.IO) {
@@ -103,6 +123,10 @@ class KubernetesRepositoryImpl(
         } else {
             api.getPodListForAllNamespaces().items.map { it.toDomainModel() }
         }
+    }
+
+    override suspend fun getPodLog(podName: String, namespace: String): String = withContext(Dispatchers.IO) {
+        api.getPodLog(podName, namespace)
     }
 
     override suspend fun createPod(yaml: String, namespace: String): Pod = withContext(Dispatchers.IO) {

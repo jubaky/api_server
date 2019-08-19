@@ -44,6 +44,8 @@ interface KubernetesRepository {
 
     suspend fun getPodList(namespace: String? = null): List<Pod>
 
+    suspend fun getPodLog(podName: String, namespace: String): String
+
     suspend fun createPod(yaml: String, namespace: String): Pod
 
     suspend fun replacePod(name: String, yaml: String, namespace: String): Pod
