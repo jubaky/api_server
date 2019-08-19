@@ -13,6 +13,7 @@ import org.jaram.jubaky.jenkins.JenkinsClientWithJson
 import org.jaram.jubaky.jenkins.JenkinsClientWithText
 import org.jaram.jubaky.jenkins.protocol.JobProtocol
 import org.jaram.jubaky.jenkins.protocol.JobSpecProtocol
+import org.jaram.jubaky.protocol.BuildInfo
 import org.jaram.jubaky.repository.JenkinsRepository
 import org.jaram.jubaky.service.BuildCheckService
 import org.w3c.dom.Element
@@ -288,7 +289,9 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun buildWithParameters(jobName: String, branchName: String, buildArgumentList: List<BuildArgument>) {
+    override suspend fun buildWithParameters(buildInfo: BuildInfo, buildArgumentList: List<BuildArgument>) {
+        val jobName = buildInfo.applicationName
+        val branchName = buildInfo.branch
         val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val buildArgumentMap = mutableMapOf<String, String>()
         buildArgumentList.map {
@@ -309,6 +312,7 @@ class JenkinsRepositoryImpl(
 
             val currentBuildNumber = getJob(jobName, branchName).lastBuildNumber + 1
             val build = Build(
+                buildId = buildInfo.id,
                 name = jobName,
                 branch = branchName,
                 buildNumber = currentBuildNumber,

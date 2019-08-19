@@ -10,8 +10,8 @@ class BuildService(
     private val jenkinsRepository: JenkinsRepository
 ) {
 
-    fun getRecentBuildList(applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {
-        return emptyList()
+    suspend fun getRecentBuildList(applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {
+        return buildRepository.getRecentBuildList(applicationId, count, branch)
     }
 
     suspend fun getBuildLog(buildId: Int): String {
@@ -20,9 +20,13 @@ class BuildService(
         return jenkinsRepository.getJobLog(buildInfo.applicationName, buildInfo.branch, buildInfo.buildNumber).log
     }
 
-    suspend fun runBuild(applicationId: Int, branch: String, buildArgumentList: List<BuildArgument>) {
-        val buildInfo: BuildInfo = buildRepository.getBuildInfo(applicationId)
+    suspend fun createBuild() {
 
-        jenkinsRepository.buildWithParameters(buildInfo.applicationName, branch, buildArgumentList)
+    }
+
+    suspend fun runBuild(applicationId: Int, branch: String, buildArgumentList: List<BuildArgument>) {
+        val buildInfo: BuildInfo = buildRepository.getBuildInfo(applicationId, branch)
+
+        jenkinsRepository.buildWithParameters(buildInfo, buildArgumentList)
     }
 }

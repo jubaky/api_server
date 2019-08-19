@@ -8,11 +8,11 @@ class ApplicationService(
     private val gitRepository: GitRepository
 ) {
 
-    fun getApplicationList() = applicationRepository.getApplicationList()
+    suspend fun getApplicationList() = applicationRepository.getApplicationList()
 
-    fun getApplicationInfo(applicationId: Int) = applicationRepository.getApplicationInfo(applicationId)
+    suspend fun getApplicationInfo(applicationId: Int) = applicationRepository.getApplicationInfo(applicationId)
 
-    fun getBranchList(applicationId: Int): List<String> {
+    suspend fun getBranchList(applicationId: Int): List<String> {
         val gitRepositoryUrl = applicationRepository.getGitRepositoryUrl(applicationId)
 
         return gitRepository.getBranchList(gitRepositoryUrl)

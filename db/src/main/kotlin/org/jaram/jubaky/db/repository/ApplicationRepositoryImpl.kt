@@ -1,26 +1,32 @@
 package org.jaram.jubaky.db.repository
 
 import org.jaram.jubaky.db.dao.ApplicationDao
+import org.jaram.jubaky.db.dao.GitDao
 import org.jaram.jubaky.domain.Application
 import org.jaram.jubaky.repository.ApplicationRepository
+import org.joda.time.DateTime
 
 class ApplicationRepositoryImpl(
-    private val gitDao: ApplicationDao
+    private val applicationDao: ApplicationDao,
+    private val gitDao: GitDao
 ) : ApplicationRepository {
-    override fun getApplicationList(): List<Application> {
-        return emptyList()
+    override suspend fun getApplicationList(): List<Application> {
+        return applicationDao.getApplicationList()
     }
 
-    override fun getApplicationInfo(applicationId: Int): Application {
-        return Application(
-            id = 0,
-            name = "",
-            gitRepositoryUrl = "",
-            url = ""
-        )
+    override suspend fun getApplicationInfo(applicationId: Int): Application {
+        return applicationDao.getApplicationInfo(applicationId)
     }
 
-    override fun getGitRepositoryUrl(applicationId: Int): String {
-        return ""
+    override suspend fun getGitRepositoryUrl(applicationId: Int): String {
+        return gitDao.getGitRepositoryUrl(applicationId)
+    }
+
+    override suspend fun getUserId(applicationId: Int): Int {
+        return applicationDao.getUserId(applicationId)
+    }
+
+    override suspend fun updateApplicationTime(applicationId: Int, time: DateTime) {
+        applicationDao.updateApplicationTime(applicationId, time)
     }
 }

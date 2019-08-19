@@ -2,6 +2,7 @@ package org.jaram.jubaky.repository
 
 import org.jaram.jubaky.domain.jenkins.Pipeline
 import org.jaram.jubaky.domain.jenkins.*
+import org.jaram.jubaky.protocol.BuildInfo
 
 interface JenkinsRepository {
 
@@ -21,7 +22,7 @@ interface JenkinsRepository {
 
     suspend fun updateJob(jobName: String, configData: JobConfig)
 
-    suspend fun buildWithParameters(jobName: String, branchName: String, buildArgumentList: List<BuildArgument>)
+    suspend fun buildWithParameters(buildInfo: BuildInfo, buildArgumentList: List<BuildArgument>)
 
     suspend fun getPendingBuildList(): List<String>
 

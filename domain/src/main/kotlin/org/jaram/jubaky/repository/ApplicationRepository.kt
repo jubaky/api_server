@@ -1,12 +1,17 @@
 package org.jaram.jubaky.repository
 
 import org.jaram.jubaky.domain.Application
+import org.joda.time.DateTime
 
 interface ApplicationRepository {
 
-    fun getApplicationList(): List<Application>
+    suspend fun getApplicationList(): List<Application>
 
-    fun getApplicationInfo(applicationId: Int): Application
+    suspend fun getApplicationInfo(applicationId: Int): Application
 
-    fun getGitRepositoryUrl(applicationId: Int): String
+    suspend fun getGitRepositoryUrl(applicationId: Int): String
+
+    suspend fun getUserId(applicationId: Int): Int
+
+    suspend fun updateApplicationTime(applicationId: Int, time: DateTime)
 }

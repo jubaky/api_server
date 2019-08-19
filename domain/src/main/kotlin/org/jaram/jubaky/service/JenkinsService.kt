@@ -1,6 +1,7 @@
 package org.jaram.jubaky.service
 
 import org.jaram.jubaky.domain.jenkins.*
+import org.jaram.jubaky.protocol.BuildInfo
 import org.jaram.jubaky.repository.JenkinsRepository
 
 
@@ -36,8 +37,8 @@ class JenkinsService(
         jenkinsRepository.updateJob(jobName, configData)
     }
 
-    suspend fun buildWithParameters(jobName: String, branchName: String, buildArgumentList: List<BuildArgument>) {
-        jenkinsRepository.buildWithParameters(jobName, branchName, buildArgumentList)
+    suspend fun buildWithParameters(buildInfo: BuildInfo, branchName: String, buildArgumentList: List<BuildArgument>) {
+        jenkinsRepository.buildWithParameters(buildInfo, buildArgumentList)
     }
 
     suspend fun getPendingBuildList(): List<String> {
