@@ -20,4 +20,8 @@ class TemplateRepositoryImpl(
     override suspend fun updateTemplateTime(templateId: Int, time: DateTime) {
         templateDao.updateTemplateTime(templateId, time)
     }
+
+    override suspend fun updateTemplateYaml(templateId: Int, yaml: String) {
+        templateDao.updateTemplateYaml(templateId, yaml)
+    }
 }

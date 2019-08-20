@@ -5,9 +5,11 @@ import org.joda.time.DateTime
 
 interface DeployRepository {
 
-    suspend fun createDeploy(buildId: Int, namespace: String, status: String, templateId: Int, creatorId: Int)
+    suspend fun createDeploy(buildId: Int, namespace: String, status: String, applicationId: Int, templateId: Int, creatorId: Int)
 
-    suspend fun getRecentDeployList(count: Int, namespace: String?): List<DeployInfo>
+    suspend fun checkDeploy(buildId: Int): Boolean
+
+    suspend fun getRecentDeployList(buildId: Int, applicationId: Int, userGroupId: Int, count: Int, namespace: String?): List<DeployInfo>
 
     suspend fun getDeployInfoByDeployId(deployId: Int): DeployInfo
 

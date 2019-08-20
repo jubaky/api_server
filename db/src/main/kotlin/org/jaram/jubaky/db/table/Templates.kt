@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.IntIdTable
 import org.joda.time.DateTime
 
 object Templates : IntIdTable("Templates") {
-    val name = varchar("application_name", 64)
+    val name = varchar("name", 64)
     val kind = varchar("kind", 20)
     val yaml = text("yaml")
     val application = reference("application_id", Applications)

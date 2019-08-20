@@ -4,20 +4,21 @@ import org.jaram.jubaky.domain.jenkins.BuildArgument
 import org.jaram.jubaky.domain.jenkins.JobConfig
 import org.jaram.jubaky.protocol.BuildInfo
 import org.jaram.jubaky.protocol.JobInfo
-import org.jaram.jubaky.repository.ApplicationRepository
-import org.jaram.jubaky.repository.BuildRepository
-import org.jaram.jubaky.repository.JenkinsRepository
-import org.jaram.jubaky.repository.JobRepository
+import org.jaram.jubaky.repository.*
 
 class BuildService(
     private val buildRepository: BuildRepository,
     private val jenkinsRepository: JenkinsRepository,
     private val applicationRepository: ApplicationRepository,
-    private val jobRepository: JobRepository
+    private val jobRepository: JobRepository,
+    private val userRepository: UserRepository
 ) {
 
-    suspend fun getRecentBuildList(applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {
-        return buildRepository.getRecentBuildList(applicationId, count, branch)
+    suspend fun getRecentBuildList(emailId: String, applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {
+        val userInfo = userRepository.getUserInfo(emailId)
+        val userGroupId = userRepository.getUserGroupId(userInfo.groupName)
+
+        return buildRepository.getRecentBuildList(applicationId, userGroupId, count, branch)
     }
 
     suspend fun getBuildInfo(buildId: Int): BuildInfo {

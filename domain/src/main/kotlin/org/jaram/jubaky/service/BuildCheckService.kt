@@ -46,14 +46,14 @@ class BuildCheckService(
                 val pendingBuildIdxList = mutableListOf<Int>()
                 val pendingBuildListInJenkins = jenkinsRepository.getPendingBuildList()
 
-                pendingBuildList.map { pendingBuild ->
+                pendingBuildList.forEach { pendingBuild ->
                     val branchedJobName = jenkinsRepository.replaceNameWithBranch(pendingBuild.applicationName, pendingBuild.branch)
 
                     if (!pendingBuildListInJenkins.contains(branchedJobName))  // If PENDING -> PROGRESS
                         pendingBuildIdxList.add(pendingBuildList.indexOf(pendingBuild))
                 }
 
-                pendingBuildIdxList.map { idx ->
+                pendingBuildIdxList.forEach { idx ->
                     val progressBuild = pendingBuildList.removeAt(idx)
 
                     progressBuildList.add(progressBuild)
@@ -85,44 +85,44 @@ class BuildCheckService(
                     progressBuildList[i] = toBuild(build.buildId, job, jobSpec)
                 }
 
-                abortedBuildIdxList.map { idx -> abortedBuildList.add(progressBuildList.removeAt(idx)) }
-                successBuildIdxList.map { idx -> successBuildList.add(progressBuildList.removeAt(idx)) }
-                failureBuildIdxList.map { idx -> failureBuildList.add(progressBuildList.removeAt(idx)) }
+                abortedBuildIdxList.forEach { idx -> abortedBuildList.add(progressBuildList.removeAt(idx)) }
+                successBuildIdxList.forEach { idx -> successBuildList.add(progressBuildList.removeAt(idx)) }
+                failureBuildIdxList.forEach { idx -> failureBuildList.add(progressBuildList.removeAt(idx)) }
 
                 // Update data to DB
-                abortedBuildList.map { build -> updateDatabase(build) } // Update Status
+                abortedBuildList.forEach { build -> updateDatabase(build) } // Update Status
                 TimeUnit.MILLISECONDS.sleep(200)
-                pendingBuildList.map { build -> updateDatabase(build) }
+                pendingBuildList.forEach { build -> updateBuildStatus(build) }
                 TimeUnit.MILLISECONDS.sleep(200)
-                progressBuildList.map { build -> updateDatabase(build) }
+                progressBuildList.forEach { build -> updateBuildStatus(build) }
                 TimeUnit.MILLISECONDS.sleep(200)
-                successBuildList.map { build -> updateDatabase(build) }
+                successBuildList.forEach { build -> updateDatabase(build) }
                 TimeUnit.MILLISECONDS.sleep(200)
-                failureBuildList.map { build -> updateDatabase(build) }
+                failureBuildList.forEach { build -> updateDatabase(build) }
                 TimeUnit.MILLISECONDS.sleep(200)
 
                 /**
                  * @TODO
                  * Deep clone and doing post
                  */
-//                buildEventBus.post(
-//                    mapOf(
-//                        "abortedBuildList" to abortedBuildList,
-//                        "pendingBuildList" to pendingBuildList,
-//                        "progressBuildList" to progressBuildList,
-//                        "successBuildList" to successBuildList,
-//                        "failureBuildList" to failureBuildList
-//                    )
-//                )
+                buildEventBus.post(
+                    mapOf(
+                        "abortedBuildList" to abortedBuildList,
+                        "pendingBuildList" to pendingBuildList,
+                        "progressBuildList" to progressBuildList,
+                        "successBuildList" to successBuildList,
+                        "failureBuildList" to failureBuildList
+                    )
+                )
 
-                println(mapOf(
-                    "abortedBuildList" to abortedBuildList,
-                    "pendingBuildList" to pendingBuildList,
-                    "progressBuildList" to progressBuildList,
-                    "successBuildList" to successBuildList,
-                    "failureBuildList" to failureBuildList
-                ))
-                println(jenkinsRepository.getPendingBuildList())
+//                println(mapOf(
+//                    "abortedBuildList" to abortedBuildList,
+//                    "pendingBuildList" to pendingBuildList,
+//                    "progressBuildList" to progressBuildList,
+//                    "successBuildList" to successBuildList,
+//                    "failureBuildList" to failureBuildList
+//                ))
+//                println(jenkinsRepository.getPendingBuildList())
 
                 abortedBuildList.clear()
                 successBuildList.clear()
@@ -161,15 +161,19 @@ class BuildCheckService(
         return buildCheckJob.isActive
     }
 
-    private suspend fun updateDatabase(build: Build) {
-        val applicationInfo = applicationRepository.getApplicationInfo(build.applicationName)
-
+    private suspend fun updateBuildStatus(build: Build) {
         buildRepository.updateBuildStatus(
             build.buildId,
             buildStatusToString(build.status),
             DateTime(build.startTime),
             DateTime(build.endTime)
         )
+    }
+
+    private suspend fun updateDatabase(build: Build) {
+        val applicationInfo = applicationRepository.getApplicationInfo(build.applicationName)
+
+        updateBuildStatus(build)
 
         jobRepository.updateJob(
             applicationId = applicationInfo.id,
@@ -182,7 +186,7 @@ class BuildCheckService(
         val branchedJobName = jenkinsRepository.replaceNameWithBranch(jobName, branchName)
 
         // Check PENDING
-        jenkinsRepository.getPendingBuildList().map { pendingBuildName ->
+        jenkinsRepository.getPendingBuildList().forEach { pendingBuildName ->
             if (pendingBuildName == branchedJobName)
                 throw JenkinsBuildDuplicationException()
         }

@@ -9,12 +9,16 @@ class DeployRepositoryImpl(
     private val deployDao: DeployDao
 ) : DeployRepository {
 
-    override suspend fun createDeploy(buildId: Int, namespace: String, status: String, templateId: Int, creatorId: Int) {
-        return deployDao.createDeploy(buildId, namespace, status, templateId, creatorId)
+    override suspend fun createDeploy(buildId: Int, namespace: String, status: String, applicationId: Int, templateId: Int, creatorId: Int) {
+        return deployDao.createDeploy(buildId, namespace, status, applicationId, templateId, creatorId)
     }
 
-    override suspend fun getRecentDeployList(count: Int, namespace: String?): List<DeployInfo> {
-        return deployDao.getRecentDeployList(count, namespace)
+    override suspend fun checkDeploy(buildId: Int): Boolean {
+        return deployDao.checkDeploy(buildId)
+    }
+
+    override suspend fun getRecentDeployList(buildId: Int, applicationId: Int, userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
+        return deployDao.getRecentDeployList(buildId, applicationId, userGroupId, count, namespace)
     }
 
     override suspend fun getDeployInfoByDeployId(deployId: Int): DeployInfo {

@@ -13,15 +13,13 @@ import org.jaram.jubaky.enumuration.deployStatusToString
 import org.jaram.jubaky.kubernetes.KubernetesApi
 import org.jaram.jubaky.kubernetes.toDomainModel
 import org.jaram.jubaky.protocol.DeployInfo
-import org.jaram.jubaky.repository.ApplicationRepository
-import org.jaram.jubaky.repository.DeployRepository
-import org.jaram.jubaky.repository.KubernetesRepository
-import org.jaram.jubaky.repository.TemplateRepository
+import org.jaram.jubaky.repository.*
 import org.jaram.jubaky.service.DeployCheckService
 import org.joda.time.DateTime
 
 class KubernetesRepositoryImpl(
     private val applicationRepository: ApplicationRepository,
+    private val buildRepository: BuildRepository,
     private val deployRepository: DeployRepository,
     private val templateRepository: TemplateRepository,
     private val deployCheckService: DeployCheckService,
@@ -69,10 +67,10 @@ class KubernetesRepositoryImpl(
     }
 
     override suspend fun createDeployment(buildId: Int, yaml: String, namespace: String): Deployment = withContext(Dispatchers.IO) {
-        val deploy: DeployInfo = deployRepository.getDeployInfoByBuildId(buildId)
+        val buildInfo = buildRepository.getBuildInfo(buildId)
         val deployment = api.createDeployment(namespace, Yaml.load(yaml) as ExtensionsV1beta1Deployment).toDomainModel()
 
-        val applicationInfo = applicationRepository.getApplicationInfo(deploy.applicationName)
+        val applicationInfo = applicationRepository.getApplicationInfo(buildInfo.applicationName)
 
         templateRepository.createTemplate(
             name = "",  // Don't know what name is in
@@ -85,6 +83,7 @@ class KubernetesRepositoryImpl(
             buildId = buildId,
             namespace = namespace,
             status = deployStatusToString(DeployStatus.SUCCESS),
+            applicationId = applicationInfo.id,
             templateId = templateRepository.getTemplateInfo(applicationInfo.name).id,
             creatorId = applicationRepository.getUserId(applicationInfo.id)
         )
@@ -94,6 +93,11 @@ class KubernetesRepositoryImpl(
 
     override suspend fun replaceDeployment(deployInfo: DeployInfo): Deployment = withContext(Dispatchers.IO) {
         val template = templateRepository.getTemplateInfo(deployInfo.applicationName)
+
+        println(deployInfo)
+        println(template)
+        println(template.yaml)
+
         val deployment = api.replaceDeployment(
             deployInfo.applicationName,
             deployInfo.namespace,

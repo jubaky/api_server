@@ -12,8 +12,8 @@ class BuildRepositoryImpl(
         buildDao.createBuilds(branch, jobId, tag, result, status, applicationId, creatorId, createTime)
     }
 
-    override suspend fun getRecentBuildList(applicationId: Int, count: Int, branch: String?): List<BuildInfo> {
-        return buildDao.getRecentBuildList(applicationId, count, branch)
+    override suspend fun getRecentBuildList(applicationId: Int, userGroupId: Int, count: Int, branch: String?): List<BuildInfo> {
+        return buildDao.getRecentBuildList(applicationId, userGroupId, count, branch)
     }
 
     override suspend fun getBuildInfo(buildId: Int): BuildInfo {

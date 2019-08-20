@@ -1,6 +1,7 @@
 package org.jaram.jubaky.db.repository
 
 import org.jaram.jubaky.db.dao.UserDao
+import org.jaram.jubaky.domain.User
 import org.jaram.jubaky.repository.UserRepository
 import org.joda.time.DateTime
 
@@ -29,5 +30,13 @@ class UserRepositoryImpl(
 
     override suspend fun updateLastLoginTime(emailId: String, time: DateTime) {
         userDao.updateLastLoginTime(emailId, time)
+    }
+
+    override suspend fun getUserInfo(emailId: String): User {
+        return userDao.getUserInfo(emailId)
+    }
+
+    override suspend fun getUserGroupId(groupName: String): Int {
+        return userDao.getUserGroupId(groupName)
     }
 }

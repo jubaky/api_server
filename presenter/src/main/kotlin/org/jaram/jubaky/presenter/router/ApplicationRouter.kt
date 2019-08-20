@@ -59,7 +59,13 @@ fun Route.app(
                 val applicationId = pathParam("applicationId").toInt()
                 val topSize = queryParamSafe("top")?.toIntOrNull() ?: 10
 
-                response(buildService.getRecentBuildList(applicationId, topSize))
+                /**
+                 * @TODO
+                 * eamil 받아와야 함
+                 */
+                val emailId = ""
+
+                response(buildService.getRecentBuildList(emailId, applicationId, topSize))
             }
 
             get("/{buildId}") {
@@ -72,7 +78,18 @@ fun Route.app(
                 val topSize = queryParamSafe("top")?.toIntOrNull() ?: 10
                 val namespace = queryParamSafe("namespace")
 
-                response(deployService.getRecentDeployList(topSize, namespace))
+                /**
+                 * @TODO
+                 * 파라미터 받아야 함, 아니면 SQL 만들 것
+                 */
+
+                val emailId = ""
+                val buildId = 1
+                val applicationId = 1
+
+                response(
+                    deployService.getRecentDeployList(emailId, buildId, applicationId, topSize, namespace)
+                )
             }
 
             get("/{deployId}") {
@@ -94,8 +111,15 @@ fun Route.app(
             }
 
             get("/build") {
+                /**
+                 * @TODO
+                 * emailId 받아와야 함
+                 */
+                val emailId = ""
+
                 response(
                     buildService.getRecentBuildList(
+                        emailId,
                         pathParam("applicationId").toInt(),
                         queryParamSafe("top")?.toIntOrNull() ?: 10,
                         queryParam("branch_name")

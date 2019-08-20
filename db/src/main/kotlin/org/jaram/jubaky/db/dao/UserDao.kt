@@ -1,7 +1,10 @@
 package org.jaram.jubaky.db.dao
 
 import org.jaram.jubaky.db.DB
+import org.jaram.jubaky.db.table.GroupMembers
+import org.jaram.jubaky.db.table.Groups
 import org.jaram.jubaky.db.table.Users
+import org.jaram.jubaky.domain.User
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
@@ -73,5 +76,22 @@ class UserDao(private val db: DB) {
             (Users.isDisabled eq false)
                 .and(Users.emailId eq emailId)
         }.firstOrNull()?.get(Users.password)?.contentEquals(password) == true
+    }
+
+    suspend fun getUserInfo(emailId: String): User = db.read {
+        Users.innerJoin(GroupMembers).innerJoin(Groups).select {
+            Users.emailId.eq(emailId)
+        }.map {
+            User (
+                emailId = it[Users.emailId],
+                password = it[Users.password],
+                name = it[Users.name],
+                groupName = it[Groups.name]
+            )
+        }.first()
+    }
+
+    suspend fun getUserGroupId(groupName: String): Int = db.read {
+        Groups.slice(Groups.id).select { Groups.name.eq(groupName) }.map { it[Groups.id].value }.first()
     }
 }

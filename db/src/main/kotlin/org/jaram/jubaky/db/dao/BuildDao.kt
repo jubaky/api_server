@@ -1,11 +1,9 @@
 package org.jaram.jubaky.db.dao
 
 import org.jaram.jubaky.db.DB
-import org.jaram.jubaky.db.table.Applications
-import org.jaram.jubaky.db.table.Builds
-import org.jaram.jubaky.db.table.Jobs
-import org.jaram.jubaky.db.table.Users
+import org.jaram.jubaky.db.table.*
 import org.jaram.jubaky.enumuration.BuildStatus
+import org.jaram.jubaky.enumuration.toBuildStatus
 import org.jaram.jubaky.protocol.BuildInfo
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
@@ -27,12 +25,12 @@ class BuildDao(private val db: DB) {
         }
     }
 
-    suspend fun getRecentBuildList(applicationId: Int, count: Int, branch: String?): List<BuildInfo> {
+    suspend fun getRecentBuildList(applicationId: Int, userGroupId: Int, count: Int, branch: String?): List<BuildInfo> {
         if (branch == null)
             return db.read {
-                Builds.innerJoin(Users).innerJoin(Applications).select {
-                    Builds.application.eq(applicationId)
-                }.orderBy(Builds.createTime to SortOrder.DESC).map {
+                Builds.innerJoin(Users).innerJoin(Applications).innerJoin(Permissions).select {
+                    Builds.application.eq(applicationId) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+                }.orderBy(Builds.createTime to SortOrder.DESC).limit(count).map {
                     BuildInfo (
                         id = it[Builds.id].value,
                         branch = it[Builds.branch],
@@ -45,7 +43,7 @@ class BuildDao(private val db: DB) {
                         endTime = it[Builds.finishTime],
                         applicationName = it[Applications.name],
                         /** Need to put correct values **/
-                        status = BuildStatus.SUCCESS,
+                        status = toBuildStatus(it[Builds.status]),
                         progressRate = 100.0,
                         recentHistory = listOf(BuildInfo.BuildHistoryItem (
                             duration = 1,
@@ -53,11 +51,12 @@ class BuildDao(private val db: DB) {
                         ))
                     )
                 }
-            }.subList(0, count)
+            }
+
         return db.read {
             Builds.innerJoin(Users).innerJoin(Applications).select {
-                Builds.application.eq(applicationId) and Builds.branch.eq(branch)
-            }.orderBy(Builds.createTime to SortOrder.DESC).map {
+                Builds.application.eq(applicationId) and Builds.branch.eq(branch) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+            }.orderBy(Builds.createTime to SortOrder.DESC).limit(count).map {
                 BuildInfo (
                     id = it[Builds.id].value,
                     branch = it[Builds.branch],
@@ -70,7 +69,7 @@ class BuildDao(private val db: DB) {
                     endTime = it[Builds.finishTime],
                     applicationName = it[Applications.name],
                     /** Need to put correct values **/
-                    status = BuildStatus.SUCCESS,
+                    status = toBuildStatus(it[Builds.status]),
                     progressRate = 100.0,
                     recentHistory = listOf(
                         BuildInfo.BuildHistoryItem(
@@ -79,7 +78,7 @@ class BuildDao(private val db: DB) {
                         )
                     )
                 )
-            }.subList(0, count)
+            }
         }
     }
 
@@ -99,7 +98,7 @@ class BuildDao(private val db: DB) {
                 endTime = it[Builds.finishTime],
                 applicationName = it[Applications.name],
                 /** Need to put correct values **/
-                status = BuildStatus.SUCCESS,
+                status = toBuildStatus(it[Builds.status]),
                 progressRate = 100.0,
                 recentHistory = listOf(
                     BuildInfo.BuildHistoryItem(
@@ -127,7 +126,7 @@ class BuildDao(private val db: DB) {
                 endTime = it[Builds.finishTime],
                 applicationName = it[Applications.name],
                 /** Need to put correct values **/
-                status = BuildStatus.SUCCESS,
+                status = toBuildStatus(it[Builds.status]),
                 progressRate = 100.0,
                 recentHistory = listOf(
                     BuildInfo.BuildHistoryItem(

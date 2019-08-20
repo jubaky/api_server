@@ -49,4 +49,15 @@ class TemplateDao(private val db: DB) {
             )
         }
     }
+
+    suspend fun updateTemplateYaml(templateId: Int, yaml: String) {
+        db.execute {
+            Templates.update (
+                where = { Templates.id.eq(templateId) },
+                body = {
+                    it[this.yaml] = yaml
+                }
+            )
+        }
+    }
 }

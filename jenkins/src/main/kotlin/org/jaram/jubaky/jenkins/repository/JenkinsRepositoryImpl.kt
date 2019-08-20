@@ -320,6 +320,7 @@ class JenkinsRepositoryImpl(
     override suspend fun buildWithParameters(applicationId: Int, jobInfo: JobInfo, buildArgumentList: List<BuildArgument>) {
         val jobName = jobInfo.applicationName
         val branchName = jobInfo.branch
+        val currentJobInfo = jobRepository.getJobInfo(applicationId, branchName)
 
         val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val buildArgumentMap = mutableMapOf<String, String>()
@@ -339,7 +340,13 @@ class JenkinsRepositoryImpl(
         if (response.isSuccessful) {
             TimeUnit.MILLISECONDS.sleep(startDelayTime.toLong())
 
-            val currentBuildNumber = jobInfo.lastBuildNumber + 1
+            val currentBuildNumber = currentJobInfo.lastBuildNumber + 1
+
+            jobRepository.updateJob(
+                applicationId = applicationId,
+                branch = branchName,
+                lastBuildNumber = currentBuildNumber
+            )
 
             // Save data to DB
             buildRepository.createBuilds(

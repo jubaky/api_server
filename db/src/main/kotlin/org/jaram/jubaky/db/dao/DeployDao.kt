@@ -2,22 +2,20 @@ package org.jaram.jubaky.db.dao
 
 import org.jaram.jubaky.db.DB
 import org.jaram.jubaky.db.table.*
-import org.jaram.jubaky.enumuration.DeployStatus
+import org.jaram.jubaky.enumuration.toDeployStatus
 import org.jaram.jubaky.protocol.DeployInfo
 import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.*
 import org.joda.time.DateTime
 
 class DeployDao(private val db: DB) {
-    suspend fun createDeploy(buildId: Int, namespace: String, status: String, templateId: Int, creatorId: Int) {
+    suspend fun createDeploy(buildId: Int, namespace: String, status: String, applicationId: Int, templateId: Int, creatorId: Int) {
         db.execute {
             Deploys.insert {
                 it[this.build] = EntityID(buildId, Builds)
                 it[this.namespace] = namespace
                 it[this.status] = status
+                it[this.application] = EntityID(applicationId, Applications)
                 it[this.template] = EntityID(templateId, Templates)
                 it[this.creator] = EntityID(creatorId, Users)
                 it[this.createTime] = DateTime.now()
@@ -25,10 +23,19 @@ class DeployDao(private val db: DB) {
         }
     }
 
-    suspend fun getRecentDeployList(count: Int, namespace: String?): List<DeployInfo> {
+    suspend fun checkDeploy(buildId: Int): Boolean = db.read {
+        !Deploys.select {
+            Deploys.build.eq(buildId)
+        }.empty()
+    }
+
+    suspend fun getRecentDeployList(buildId: Int, applicationId: Int, userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
         if (namespace == null)
             return db.read {
-                Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Templates).innerJoin(Builds).selectAll()
+                Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Templates).innerJoin(Builds).innerJoin(Permissions).select {
+                    Builds.id.eq(buildId) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+                }.orderBy(Deploys.createTime to SortOrder.DESC)
+                    .limit(count)
                     .map {
                         DeployInfo (
                             id = it[Deploys.id].value,
@@ -39,15 +46,14 @@ class DeployDao(private val db: DB) {
                             templateName = it[Templates.name],
                             creatorName = it[Users.name],
                             createTime = it[Deploys.createTime],
-                            /** Need to put correct value **/
-                            status = DeployStatus.SUCCESS
+                            status = toDeployStatus(it[Deploys.status])
                         )
-                    }.subList(0, count)
+                    }
             }
         return db.read {
-            Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Templates).innerJoin(Builds).select{
-                Deploys.namespace.eq(namespace)
-            }.map {
+            Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Templates).innerJoin(Builds).innerJoin(Permissions).select{
+                Deploys.namespace.eq(namespace) and Builds.id.eq(buildId) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+            }.orderBy(Deploys.createTime to SortOrder.DESC).limit(count).map {
                     DeployInfo (
                         id = it[Deploys.id].value,
                         applicationName = it[Applications.name],
@@ -57,10 +63,9 @@ class DeployDao(private val db: DB) {
                         templateName = it[Templates.name],
                         creatorName = it[Users.name],
                         createTime = it[Deploys.createTime],
-                        /** Need to put correct value **/
-                        status = DeployStatus.SUCCESS
+                        status = toDeployStatus(it[Deploys.status])
                     )
-                }.subList(0, count)
+                }
         }
     }
 
@@ -77,14 +82,13 @@ class DeployDao(private val db: DB) {
                 templateName = it[Templates.name],
                 creatorName = it[Users.name],
                 createTime = it[Deploys.createTime],
-                /** Need to put correct value **/
-                status = DeployStatus.SUCCESS
+                status = toDeployStatus(it[Deploys.status])
             )
         }.first()
     }
 
     suspend fun getDeployInfoByBuildId(buildId: Int): DeployInfo = db.read {
-        Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Templates).innerJoin(Builds).select{
+        Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Builds).innerJoin(Templates).select{
             Deploys.build.eq(buildId)
         }.map {
             DeployInfo (
@@ -96,8 +100,7 @@ class DeployDao(private val db: DB) {
                 templateName = it[Templates.name],
                 creatorName = it[Users.name],
                 createTime = it[Deploys.createTime],
-                /** Need to put correct value **/
-                status = DeployStatus.SUCCESS
+                status = toDeployStatus(it[Deploys.status])
             )
         }.first()
     }
