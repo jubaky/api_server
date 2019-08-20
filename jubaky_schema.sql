@@ -30,7 +30,7 @@ CREATE TABLE Users(
     name VARCHAR(30) NOT NULL,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_login_time DATETIME,
-    is_disable DATETIME DEFAULT FALSE NOT NULL
+    is_disable BOOLEAN DEFAULT 0 NOT NULL
 );
 
 
@@ -40,69 +40,69 @@ CREATE TABLE Builds(
     tag VARCHAR(32) NOT NULL,
     result TEXT,
     status VARCHAR(10) NOT NULL,
-    application INT,
-    creator INT,
+    application_id INT,
+    creator_id INT,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     start_time DATETIME,
     finish_time DATETIME,
 
-    FOREIGN KEY (application) REFERENCES Applications(id),
-    FOREIGN KEY (creator) REFERENCES Users(id)
+    FOREIGN KEY (application_id) REFERENCES Applications(id),
+    FOREIGN KEY (creator_id) REFERENCES Users(id)
 );
 
 CREATE TABLE Templates(
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(64) NOT NULL,
     kind VARCHAR(20) NOT NULL,
-    content TEXT NOT NULL,
-    application INT,
+    yaml TEXT NOT NULL,
+    application_id INT,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     update_time DATETIME,
 
-    FOREIGN KEY (application) REFERENCES Applications(id)
+    FOREIGN KEY (application_id) REFERENCES Applications(id)
 );
 
 CREATE TABLE Permissions(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    `group` INT,
-    application INT,
+    group_id INT,
+    application_id INT,
     permission VARCHAR(3) NOT NULL,
 
-    FOREIGN KEY (`group`) REFERENCES Groups(id),
-    FOREIGN KEY (application) REFERENCES Applications(id)
+    FOREIGN KEY (group_id) REFERENCES Groups(id),
+    FOREIGN KEY (application_id) REFERENCES Applications(id)
 );
 
 
 CREATE TABLE GroupMembers(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    `group` INT,
-    user INT,
+    group_id INT,
+    user_id INT,
 
-    FOREIGN KEY (`group`) REFERENCES Groups(id),
-    FOREIGN KEY (user) REFERENCES Users(id)
+    FOREIGN KEY (group_id) REFERENCES Groups(id),
+    FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
 CREATE TABLE Deploys(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    build INT,
+    build_id INT,
     namespace VARCHAR(30) NOT NULL,
     status VARCHAR(10) NOT NULL,
-    templace INT,
-    creator INT,
+    template_id INT,
+    creator_id INT,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     finish_time DATETIME,
 
-    FOREIGN KEY (build) REFERENCES Builds(id),
-    FOREIGN KEY (templace) REFERENCES Templates(id),
-    FOREIGN KEY (creator) REFERENCES Users(id)
+    FOREIGN KEY (build_id) REFERENCES Builds(id),
+    FOREIGN KEY (template_id) REFERENCES Templates(id),
+    FOREIGN KEY (creator_id) REFERENCES Users(id)
 );
 
 CREATE TABLE Credentials(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user INT,
+--     user INT,
     user_name VARCHAR(30) NOT NULL,
     password VARCHAR(128) NOT NULL,
-    `key` VARCHAR(256) NOT NULL,
+    `key` VARCHAR(256) NOT NULL
 
-    FOREIGN KEY (user) REFERENCES Users(id)
+--     FOREIGN KEY (user) REFERENCES Users(id)
 );

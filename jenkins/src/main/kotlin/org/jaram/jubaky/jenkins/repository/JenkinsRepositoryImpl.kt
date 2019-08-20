@@ -6,16 +6,23 @@ import com.offbytwo.jenkins.JenkinsServer
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.jaram.jubaky.createJenkinsApiStatusException
+import org.jaram.jubaky.domain.Application
 import org.jaram.jubaky.domain.checker.Build
 import org.jaram.jubaky.domain.jenkins.*
+import org.jaram.jubaky.enumuration.BuildStatus
+import org.jaram.jubaky.enumuration.buildStatusToString
 import org.jaram.jubaky.enumuration.toBuildStatus
 import org.jaram.jubaky.jenkins.JenkinsClientWithJson
 import org.jaram.jubaky.jenkins.JenkinsClientWithText
 import org.jaram.jubaky.jenkins.protocol.JobProtocol
 import org.jaram.jubaky.jenkins.protocol.JobSpecProtocol
 import org.jaram.jubaky.protocol.BuildInfo
+import org.jaram.jubaky.protocol.JobInfo
+import org.jaram.jubaky.repository.ApplicationRepository
+import org.jaram.jubaky.repository.BuildRepository
 import org.jaram.jubaky.repository.JenkinsRepository
 import org.jaram.jubaky.service.BuildCheckService
+import org.joda.time.DateTime
 import org.w3c.dom.Element
 import java.io.File
 import java.net.URI
@@ -27,6 +34,8 @@ import javax.xml.transform.stream.StreamResult
 
 
 class JenkinsRepositoryImpl(
+    private val applicationRepository: ApplicationRepository,
+    private val buildRepository: BuildRepository,
     private val jenkinsClientWithJson: JenkinsClientWithJson,
     private val jenkinsClientWithText: JenkinsClientWithText,
     private val buildCheckService: BuildCheckService,
@@ -66,7 +75,9 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun getJob(jobName: String, branchName: String): Job {
+    override suspend fun getJob(applicationId: Int, branchName: String): Job {
+        val jobName = applicationRepository.getApplicationInfo(applicationId).name
+
         val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val request = jenkinsClientWithJson.getJobInfo(branchedJobName)
         val response = request.await()
@@ -149,13 +160,15 @@ class JenkinsRepositoryImpl(
                 buildArgumentList = buildArgumentList
             )
 
-            return jobProtocol.toDomainModel()
+            return jobProtocol.toDomainModel(applicationId, branchName)
         } else {
             throw createJenkinsApiStatusException(response.code())
         }
     }
 
-    override suspend fun getJobSpec(jobName: String, branchName: String, buildNumber: Int): JobSpec {
+    override suspend fun getJobSpec(applicationId: Int, branchName: String, buildNumber: Int): JobSpec {
+        val jobName = applicationRepository.getApplicationInfo(applicationId).name
+
         val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val request = jenkinsClientWithJson.getJobSpecInfo(branchedJobName, buildNumber)
         val response = request.await()
@@ -206,7 +219,7 @@ class JenkinsRepositoryImpl(
                 estimatedDuration = estimatedDuration,
                 queueId = queueId,
                 keepLog = keepLog,
-                result = result,
+                result = result ?: buildStatusToString(BuildStatus.PROGRESS),
                 createTimestamp = createTimestamp
             )
 
@@ -216,7 +229,11 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun getJobLog(jobName: String, branchName: String, buildNumber: Int): JobLog {
+    override suspend fun getJobLog(buildInfo: BuildInfo): JobLog {
+        val jobName = buildInfo.applicationName
+        val branchName = buildInfo.branch
+        val buildNumber = buildInfo.buildNumber
+
         val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val request = jenkinsClientWithText.getJobLog(branchedJobName, buildNumber)
         val response = request.await()
@@ -231,8 +248,8 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun createJob(jobName: String, configData: JobConfig) {
-        val branchedJobName = replaceNameWithBranch(jobName, configData.githubBranch)
+    override suspend fun createJob(applicationId: Int, userId: Int, applicationData: Application, configData: JobConfig) {
+        val branchedJobName = replaceNameWithBranch(applicationData.name, configData.githubBranch)
         val file = File(jobConfigFilePath)
         val updatedFile = File("/tmp/${branchedJobName}_job_config_default.xml")
 
@@ -245,12 +262,21 @@ class JenkinsRepositoryImpl(
         updateConfigXml(file, updatedFile, configData)
         val fileRequestBody = RequestBody.create(MediaType.parse("application/octet-stream"), updatedFile)
 
+        println(branchedJobName)
+
         val request = jenkinsClientWithJson.createJob(branchedJobName, fileRequestBody)
         val response = request.await()
 
         updatedFile.delete()
 
-        if (!response.isSuccessful) {
+        if (response.isSuccessful) {
+            // Save data to DB
+            gitRepository.createJob(
+                branch = configData.githubBranch,
+                applicationId = applicationId,
+                tag = configData.dockerArgument.imageVersion
+            )
+        } else {
             throw createJenkinsApiStatusException(response.code())
         }
     }
@@ -289,9 +315,10 @@ class JenkinsRepositoryImpl(
         }
     }
 
-    override suspend fun buildWithParameters(buildInfo: BuildInfo, buildArgumentList: List<BuildArgument>) {
-        val jobName = buildInfo.applicationName
-        val branchName = buildInfo.branch
+    override suspend fun buildWithParameters(applicationId: Int, jobInfo: JobInfo, buildArgumentList: List<BuildArgument>) {
+        val jobName = jobInfo.applicationName
+        val branchName = jobInfo.branch
+
         val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val buildArgumentMap = mutableMapOf<String, String>()
         buildArgumentList.map {
@@ -310,16 +337,35 @@ class JenkinsRepositoryImpl(
         if (response.isSuccessful) {
             TimeUnit.MILLISECONDS.sleep(startDelayTime.toLong())
 
-            val currentBuildNumber = getJob(jobName, branchName).lastBuildNumber + 1
-            val build = Build(
-                buildId = buildInfo.id,
-                name = jobName,
+            val currentBuildNumber = jobInfo.lastBuildNumber + 1
+
+            // Save data to DB
+            buildRepository.createBuilds(
                 branch = branchName,
-                buildNumber = currentBuildNumber,
-                status = toBuildStatus("PENDING")
+                tag = jobInfo.tag,
+                result = "",
+                status = buildStatusToString(BuildStatus.PENDING),
+                applicationId = applicationId,
+                creatorId = applicationRepository.getUserId(applicationId),
+            createTime = DateTime()
             )
 
-            buildCheckService.getPendingBuildList().add(build)
+            val buildInfo = buildRepository.getRecentBuildList(applicationId, 1, branchName)[0]
+
+
+            buildCheckService.getPendingBuildList().add(
+                Build(
+                    buildId = buildInfo.id,
+                    applicationName = jobName,
+                    branch = branchName,
+                    buildNumber = currentBuildNumber,
+                    status = toBuildStatus("PENDING"),
+                    createTime = System.currentTimeMillis(),
+                    startTime = 0,
+                    endTime = 0,
+                    progressRate = 100.0
+                )
+            )
         } else {
             throw createJenkinsApiStatusException(response.code())
         }

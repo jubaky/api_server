@@ -11,12 +11,13 @@ import org.jetbrains.exposed.sql.*
 import org.joda.time.DateTime
 
 class BuildDao(private val db: DB) {
-    suspend fun createBuilds(branch: String, tag: String, result: String?, applicationId: Int, creatorId: Int, createTime: DateTime) {
+    suspend fun createBuilds(branch: String, tag: String, result: String?, status: String, applicationId: Int, creatorId: Int, createTime: DateTime) {
         db.execute {
             Builds.insert {
                 it[this.branch] = branch
                 it[this.tag] = tag
                 it[this.result] = result
+                it[this.status] = status
                 it[this.application] = EntityID(applicationId, Applications)
                 it[this.creator] = EntityID(creatorId, Users)
                 it[this.createTime] = createTime
@@ -33,6 +34,7 @@ class BuildDao(private val db: DB) {
                     BuildInfo (
                         id = it[Builds.id].value,
                         branch = it[Builds.branch],
+                        tag = it[Builds.tag],
                         buildNumber = 0, /** Need to put correct value **/
                         creatorName = it[Users.name],
                         createTime = it[Builds.createTime],
@@ -56,6 +58,7 @@ class BuildDao(private val db: DB) {
                 BuildInfo (
                     id = it[Builds.id].value,
                     branch = it[Builds.branch],
+                    tag = it[Builds.tag],
                     buildNumber = 0, /** Need to put correct value **/
                     creatorName = it[Users.name],
                     createTime = it[Builds.createTime],
@@ -83,6 +86,7 @@ class BuildDao(private val db: DB) {
             BuildInfo (
                 id = it[Builds.id].value,
                 branch = it[Builds.branch],
+                tag = it[Builds.tag],
                 buildNumber = 0, /** Need to put correct value **/
                 creatorName = it[Users.name],
                 createTime = it[Builds.createTime],
@@ -109,6 +113,7 @@ class BuildDao(private val db: DB) {
             BuildInfo (
                 id = it[Builds.id].value,
                 branch = it[Builds.branch],
+                tag = it[Builds.tag],
                 buildNumber = 0, /** Need to put correct value **/
                 creatorName = it[Users.name],
                 createTime = it[Builds.createTime],
@@ -125,6 +130,12 @@ class BuildDao(private val db: DB) {
                     )
                 )
             )
+        }.first()
+    }
+
+    suspend fun getCreatorId(buildId: Int): Int = db.read {
+        Builds.select { Builds.id.eq(buildId) }.map {
+            it[Builds.id].value
         }.first()
     }
 

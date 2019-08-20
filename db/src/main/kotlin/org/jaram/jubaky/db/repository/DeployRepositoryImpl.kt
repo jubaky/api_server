@@ -8,6 +8,11 @@ import org.joda.time.DateTime
 class DeployRepositoryImpl(
     private val deployDao: DeployDao
 ) : DeployRepository {
+
+    override suspend fun createDeploy(buildId: Int, namespace: String, status: String, templateId: Int, creatorId: Int) {
+        return deployDao.createDeploy(buildId, namespace, status, templateId, creatorId)
+    }
+
     override suspend fun getRecentDeployList(count: Int, namespace: String?): List<DeployInfo> {
         return deployDao.getRecentDeployList(count, namespace)
     }

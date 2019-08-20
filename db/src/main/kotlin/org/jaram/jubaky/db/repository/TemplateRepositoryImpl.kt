@@ -8,6 +8,11 @@ import org.joda.time.DateTime
 class TemplateRepositoryImpl(
     private val templateDao : TemplateDao
 ): TemplateRepository {
+
+    override suspend fun createTemplate(name: String, kind: String, content: String, applicationId: Int) {
+        return templateDao.createTemplate(name, kind, content, applicationId)
+    }
+
     override suspend fun getTemplateInfo(applicationName: String): TemplateInfo {
         return templateDao.getTemplateInfo(applicationName)
     }

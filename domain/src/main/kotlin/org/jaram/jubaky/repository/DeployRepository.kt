@@ -4,6 +4,9 @@ import org.jaram.jubaky.protocol.DeployInfo
 import org.joda.time.DateTime
 
 interface DeployRepository {
+
+    suspend fun createDeploy(buildId: Int, namespace: String, status: String, templateId: Int, creatorId: Int)
+
     suspend fun getRecentDeployList(count: Int, namespace: String?): List<DeployInfo>
 
     suspend fun getDeployInfoByDeployId(deployId: Int): DeployInfo

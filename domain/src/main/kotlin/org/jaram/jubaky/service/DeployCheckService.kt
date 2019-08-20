@@ -5,16 +5,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.jaram.jubaky.KuberenetesObjectNotFoundException
+import org.jaram.jubaky.KubernetesObjectNotFoundException
 import org.jaram.jubaky.KubernetesBuildDuplicationException
 import org.jaram.jubaky.domain.checker.Deploy
 import org.jaram.jubaky.domain.checker.toDeploy
 import org.jaram.jubaky.enumuration.DeployStatus
 import org.jaram.jubaky.enumuration.Kind
+import org.jaram.jubaky.enumuration.deployStatusToString
+import org.jaram.jubaky.repository.DeployRepository
 import org.jaram.jubaky.repository.KubernetesRepository
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 class DeployCheckService(
+    private val deployRepository: DeployRepository,
     private val intervalDelayTime: Int,
     private val intervalCheckHealthTime: Int
 ) {
@@ -23,9 +27,9 @@ class DeployCheckService(
 
     val deployEventBus = EventBus("DeployEventBus")
 
-    private val progressDeployList = ArrayList<Deploy>()
-    private val successDeployList = ArrayList<Deploy>()
-    private val failureDeployList = ArrayList<Deploy>()
+    private val progressDeployList = CopyOnWriteArrayList<Deploy>()
+    private val successDeployList = CopyOnWriteArrayList<Deploy>()
+    private val failureDeployList = CopyOnWriteArrayList<Deploy>()
 
     private lateinit var deployCheckJob: Job
     private lateinit var checkHealthJob: Job
@@ -43,7 +47,7 @@ class DeployCheckService(
                     when (deploy.kind) {
                         Kind.DAEMONSET -> TODO()
                         Kind.DEPLOYMENT ->
-                            obj = toDeploy(kubernetesRepository.getDeployment(deploy.name, deploy.namespace), DeployStatus.UNKNOWN)
+                            obj = toDeploy(deploy.deployId, kubernetesRepository.getDeployment(deploy.applicationName, deploy.namespace), DeployStatus.UNKNOWN)
                         Kind.NAMESPACE -> TODO()
                         Kind.NODE -> TODO()
                         Kind.POD -> TODO()
@@ -51,7 +55,7 @@ class DeployCheckService(
                         Kind.SECRET -> TODO()
                         Kind.SERVICE -> TODO()
                         Kind.STATEFULSET -> TODO()
-                        Kind.UNKNOWN -> throw KuberenetesObjectNotFoundException()
+                        Kind.UNKNOWN -> throw KubernetesObjectNotFoundException()
                     }
 
                     // Handling status
@@ -78,10 +82,10 @@ class DeployCheckService(
                 successDeployIdxList.map { idx -> successDeployList.add(progressDeployList.removeAt(idx)) }
                 failureDeployIdxList.map { idx -> failureDeployList.add(progressDeployList.removeAt(idx)) }
 
-                /**
-                 * Save data to DB
-                 */
-
+                // Update data to DB
+                progressDeployList.map { deploy -> updateDatabase(deploy) }
+                successDeployList.map { deploy -> updateDatabase(deploy) }
+                failureDeployList.map { deploy -> updateDatabase(deploy) }
 
                 /**
                  * @TODO
@@ -129,7 +133,7 @@ class DeployCheckService(
         checkHealthJob.cancel()
     }
 
-    fun getProgressDeployList(): ArrayList<Deploy> {
+    fun getProgressDeployList(): CopyOnWriteArrayList<Deploy> {
         return progressDeployList
     }
 
@@ -137,11 +141,19 @@ class DeployCheckService(
         return deployCheckJob.isActive
     }
 
+    private suspend fun updateDatabase(deploy: Deploy) {
+        deployRepository.updateDeployStatus(
+            deploy.deployId,
+            deployStatusToString(deploy.status),
+            deploy.endTime
+        )
+    }
+
     fun checkDeployDuplication(deploy: Deploy): Boolean {
         var isProgress = false
 
         progressDeployList.map { progressDeploy ->
-            if (progressDeploy.name == deploy.name)
+            if (progressDeploy.applicationName == deploy.applicationName)
                 isProgress = true
         }
 

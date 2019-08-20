@@ -18,6 +18,10 @@ class ApplicationRepositoryImpl(
         return applicationDao.getApplicationInfo(applicationId)
     }
 
+    override suspend fun getApplicationInfo(applicationName: String): Application {
+        return applicationDao.getApplicationInfo(applicationName)
+    }
+
     override suspend fun getGitRepositoryUrl(applicationId: Int): String {
         return gitDao.getGitRepositoryUrl(applicationId)
     }

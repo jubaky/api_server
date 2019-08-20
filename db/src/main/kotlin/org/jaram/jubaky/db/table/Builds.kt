@@ -1,15 +1,12 @@
 package org.jaram.jubaky.db.table
 
-import org.jaram.jubaky.db.table.Applications.default
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.joda.time.DateTime
 
 object Builds : IntIdTable("Builds") {
-    val branch = varchar("branch", 128)
+    val branch = Jobs.varchar("branch", 128)
+    val jobId = reference("job_id", Jobs)
     val tag = varchar("tag", 32)
     val result = text("result").nullable()
     val status = varchar("status", 10)

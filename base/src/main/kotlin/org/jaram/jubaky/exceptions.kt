@@ -260,7 +260,7 @@ class KubernetesBuildDuplicationException : ApiException(
     messageEn = "An application can only wait for just one deployment."
 )
 
-class KuberenetesObjectNotFoundException : ApiException(
+class KubernetesObjectNotFoundException : ApiException(
     code = 211,
     messageKr = "알 수 없는 쿠버네티스 오브젝트 형식입니다.",
     messageEn = "It is an unknown Kubernetes object type."

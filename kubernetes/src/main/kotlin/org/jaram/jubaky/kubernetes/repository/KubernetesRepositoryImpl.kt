@@ -4,15 +4,26 @@ import io.kubernetes.client.models.*
 import io.kubernetes.client.util.Yaml
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jaram.jubaky.KubernetesObjectNotFoundException
 import org.jaram.jubaky.domain.checker.toDeploy
 import org.jaram.jubaky.domain.kubernetes.*
 import org.jaram.jubaky.enumuration.DeployStatus
+import org.jaram.jubaky.enumuration.Kind
+import org.jaram.jubaky.enumuration.deployStatusToString
 import org.jaram.jubaky.kubernetes.KubernetesApi
 import org.jaram.jubaky.kubernetes.toDomainModel
+import org.jaram.jubaky.protocol.DeployInfo
+import org.jaram.jubaky.repository.ApplicationRepository
+import org.jaram.jubaky.repository.DeployRepository
 import org.jaram.jubaky.repository.KubernetesRepository
+import org.jaram.jubaky.repository.TemplateRepository
 import org.jaram.jubaky.service.DeployCheckService
+import org.joda.time.DateTime
 
 class KubernetesRepositoryImpl(
+    private val applicationRepository: ApplicationRepository,
+    private val deployRepository: DeployRepository,
+    private val templateRepository: TemplateRepository,
     private val deployCheckService: DeployCheckService,
     private val api: KubernetesApi
 ) : KubernetesRepository {
@@ -57,19 +68,39 @@ class KubernetesRepositoryImpl(
         }
     }
 
-    override suspend fun createDeployment(yaml: String, namespace: String): Deployment = withContext(Dispatchers.IO) {
+    override suspend fun createDeployment(buildId: Int, yaml: String, namespace: String): Deployment = withContext(Dispatchers.IO) {
+        val deploy: DeployInfo = deployRepository.getDeployInfoByBuildId(buildId)
         val deployment = api.createDeployment(namespace, Yaml.load(yaml) as ExtensionsV1beta1Deployment).toDomainModel()
-        val deploy = toDeploy(deployment, DeployStatus.PROGRESS)
 
-        if (!deployCheckService.checkDeployDuplication(deploy))
-            deployCheckService.getProgressDeployList().add(deploy)
+        val applicationInfo = applicationRepository.getApplicationInfo(deploy.applicationName)
+
+        templateRepository.createTemplate(
+            name = "",  // Don't know what name is in
+            kind = deployment.kind ?: "UNKNOWN",
+            content = yaml,
+            applicationId = applicationInfo.id
+        )
+
+        deployRepository.createDeploy(
+            buildId = buildId,
+            namespace = namespace,
+            status = deployStatusToString(DeployStatus.SUCCESS),
+            templateId = templateRepository.getTemplateInfo(applicationInfo.name).id,
+            creatorId = applicationRepository.getUserId(applicationInfo.id)
+        )
 
         deployment
     }
 
-    override suspend fun replaceDeployment(name: String, yaml: String, namespace: String): Deployment = withContext(Dispatchers.IO) {
-        val deployment = api.replaceDeployment(name, namespace, Yaml.load(yaml) as ExtensionsV1beta1Deployment).toDomainModel()
-        val deploy = toDeploy(deployment, DeployStatus.PROGRESS)
+    override suspend fun replaceDeployment(deployInfo: DeployInfo): Deployment = withContext(Dispatchers.IO) {
+        val template = templateRepository.getTemplateInfo(deployInfo.applicationName)
+        val deployment = api.replaceDeployment(
+            deployInfo.applicationName,
+            deployInfo.namespace,
+            Yaml.load(template.yaml) as ExtensionsV1beta1Deployment
+        ).toDomainModel()
+
+        val deploy = toDeploy(deployInfo.id, deployment, DeployStatus.PROGRESS)
 
         if (!deployCheckService.checkDeployDuplication(deploy))
             deployCheckService.getProgressDeployList().add(deploy)
@@ -235,5 +266,19 @@ class KubernetesRepositoryImpl(
 
     override suspend fun deleteStatefulSet(statefulSetName: String, namespace: String) = withContext(Dispatchers.IO) {
         api.deleteStatefulSet(statefulSetName, namespace)
+    }
+
+    override suspend fun createObject(buildId: Int, yaml: String, namespace: String) {
+        when(Yaml.load(yaml)) {
+//            is V1beta1DaemonSet -> createDaemonSet()
+            is ExtensionsV1beta1Deployment -> createDeployment(buildId, yaml, namespace)
+//            is V1Namespace -> createNamespace()
+//            is V1Pod -> createPod()
+//            is V1ReplicaSet -> createReplicaSet()
+//            is V1Secret -> createSecret()
+//            is V1Service -> createService()
+//            is V1StatefulSet -> createStatefulSet()
+            else -> throw KubernetesObjectNotFoundException()
+        }
     }
 }

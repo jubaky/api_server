@@ -4,28 +4,33 @@ import org.jaram.jubaky.domain.kubernetes.Deployment
 import org.jaram.jubaky.enumuration.DeployStatus
 import org.jaram.jubaky.enumuration.Kind
 import org.jaram.jubaky.enumuration.toKind
+import org.joda.time.DateTime
 
 data class Deploy(
-    val name: String,
+    val deployId: Int,
+    val applicationName: String,
     val namespace: String,
     val kind: Kind,
     val maxUnavailable: Int,
     val readyReplicas: Int,
     val unavailableReplicas: Int,
     val updatedReplicas: Int,
+    val endTime: DateTime,
     var status: DeployStatus
 )
 
-fun toDeploy(obj: Any, status: DeployStatus): Deploy {
+fun toDeploy(deployId: Int, obj: Any, status: DeployStatus): Deploy {
     return when(obj) {
         is Deployment -> Deploy(
-            name = obj.metadata?.name!!,
+            deployId = deployId,
+            applicationName = obj.metadata?.name!!,
             namespace = obj.metadata.namespace!!,
             kind = toKind(obj.kind!!),
             maxUnavailable = obj.spec?.strategy?.rollingUpdate?.maxUnavailable!!.toInt(),
             readyReplicas = obj.status?.readyReplicas!!.toInt(),
             unavailableReplicas = obj.status?.unavailableReplicas!!.toInt(),
             updatedReplicas = obj.status?.updatedReplicas!!.toInt(),
+            endTime = obj.status?.conditions?.get(0)?.lastUpdateTime!!,
             status = status
         )
         /**
@@ -33,13 +38,15 @@ fun toDeploy(obj: Any, status: DeployStatus): Deploy {
          * DaemonSet, ReplicaSet, Service, StatefulSet 등도 만들기
          */
         else -> Deploy(
-            name = "UNKNOWN",
+            deployId = deployId,
+            applicationName = "UNKNOWN",
             namespace = "default",
             kind = Kind.UNKNOWN,
             maxUnavailable = 0,
             readyReplicas = 0,
             unavailableReplicas = 0,
             updatedReplicas = 0,
+            endTime = DateTime(),
             status = status
         )
     }

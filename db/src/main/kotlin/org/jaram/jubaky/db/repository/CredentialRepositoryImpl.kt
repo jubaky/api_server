@@ -7,12 +7,12 @@ import org.jaram.jubaky.repository.CredentialRepository
 class CredentialRepositoryImpl(
     private val credentialDao: CredentialDao
 ): CredentialRepository {
-    override suspend fun getCredentialList(userId: Int): List<CredentialInfo> {
-        return credentialDao.getCredentialList(userId)
+    override suspend fun getCredentialList(): List<CredentialInfo> {
+        return credentialDao.getCredentialList()
     }
 
-    override suspend fun createCredential(userId: Int, userName: String, password: String, key: String) {
-        credentialDao.createCredential(userId, userName, password, key)
+    override suspend fun createCredential(userName: String, password: String, key: String) {
+        credentialDao.createCredential(userName, password, key)
     }
 
     override suspend fun deleteCredential(key: String) {

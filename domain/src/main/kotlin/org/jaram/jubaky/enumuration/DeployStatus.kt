@@ -15,3 +15,12 @@ fun toDeployStatus(status: String): DeployStatus {
         else -> DeployStatus.UNKNOWN
     }
 }
+
+fun deployStatusToString(deployStatus: DeployStatus): String {
+    return when(deployStatus) {
+        DeployStatus.PROGRESS -> "PROGRESS"
+        DeployStatus.SUCCESS -> "SUCCESS"
+        DeployStatus.FAILURE -> "FAILURE"
+        DeployStatus.UNKNOWN -> "UNKNOWN"
+    }
+}
