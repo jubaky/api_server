@@ -21,6 +21,7 @@ import org.jaram.jubaky.protocol.JobInfo
 import org.jaram.jubaky.repository.ApplicationRepository
 import org.jaram.jubaky.repository.BuildRepository
 import org.jaram.jubaky.repository.JenkinsRepository
+import org.jaram.jubaky.repository.JobRepository
 import org.jaram.jubaky.service.BuildCheckService
 import org.joda.time.DateTime
 import org.w3c.dom.Element
@@ -36,6 +37,7 @@ import javax.xml.transform.stream.StreamResult
 class JenkinsRepositoryImpl(
     private val applicationRepository: ApplicationRepository,
     private val buildRepository: BuildRepository,
+    private val jobRepository: JobRepository,
     private val jenkinsClientWithJson: JenkinsClientWithJson,
     private val jenkinsClientWithText: JenkinsClientWithText,
     private val buildCheckService: BuildCheckService,
@@ -271,7 +273,7 @@ class JenkinsRepositoryImpl(
 
         if (response.isSuccessful) {
             // Save data to DB
-            gitRepository.createJob(
+            jobRepository.createJob(
                 branch = configData.githubBranch,
                 applicationId = applicationId,
                 tag = configData.dockerArgument.imageVersion
@@ -342,15 +344,16 @@ class JenkinsRepositoryImpl(
             // Save data to DB
             buildRepository.createBuilds(
                 branch = branchName,
+                jobId = jobInfo.id,
                 tag = jobInfo.tag,
                 result = "",
                 status = buildStatusToString(BuildStatus.PENDING),
                 applicationId = applicationId,
                 creatorId = applicationRepository.getUserId(applicationId),
-            createTime = DateTime()
+                createTime = DateTime()
             )
 
-            val buildInfo = buildRepository.getRecentBuildList(applicationId, 1, branchName)[0]
+            val buildInfo = buildRepository.getBuildInfo(applicationId, branchName)
 
 
             buildCheckService.getPendingBuildList().add(

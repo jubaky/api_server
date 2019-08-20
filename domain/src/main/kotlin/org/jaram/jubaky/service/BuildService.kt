@@ -7,11 +7,13 @@ import org.jaram.jubaky.protocol.JobInfo
 import org.jaram.jubaky.repository.ApplicationRepository
 import org.jaram.jubaky.repository.BuildRepository
 import org.jaram.jubaky.repository.JenkinsRepository
+import org.jaram.jubaky.repository.JobRepository
 
 class BuildService(
     private val buildRepository: BuildRepository,
     private val jenkinsRepository: JenkinsRepository,
-    private val applicationRepository: ApplicationRepository
+    private val applicationRepository: ApplicationRepository,
+    private val jobRepository: JobRepository
 ) {
 
     suspend fun getRecentBuildList(applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {

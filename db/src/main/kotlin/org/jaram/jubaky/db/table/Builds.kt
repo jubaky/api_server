@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.joda.time.DateTime
 
 object Builds : IntIdTable("Builds") {
-    val branch = Jobs.varchar("branch", 128)
+    val branch =  varchar("branch", 128)
     val jobId = reference("job_id", Jobs)
     val tag = varchar("tag", 32)
     val result = text("result").nullable()

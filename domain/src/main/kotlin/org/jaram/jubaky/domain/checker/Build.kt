@@ -10,7 +10,7 @@ data class Build(
     val applicationName: String,
     val branch: String,
     val buildNumber: Int,
-    var status: BuildStatus,
+    val status: BuildStatus,
     val createTime: Long,
     val startTime: Long,
     val endTime: Long,

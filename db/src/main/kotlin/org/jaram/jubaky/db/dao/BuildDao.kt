@@ -3,6 +3,7 @@ package org.jaram.jubaky.db.dao
 import org.jaram.jubaky.db.DB
 import org.jaram.jubaky.db.table.Applications
 import org.jaram.jubaky.db.table.Builds
+import org.jaram.jubaky.db.table.Jobs
 import org.jaram.jubaky.db.table.Users
 import org.jaram.jubaky.enumuration.BuildStatus
 import org.jaram.jubaky.protocol.BuildInfo
@@ -11,10 +12,11 @@ import org.jetbrains.exposed.sql.*
 import org.joda.time.DateTime
 
 class BuildDao(private val db: DB) {
-    suspend fun createBuilds(branch: String, tag: String, result: String?, status: String, applicationId: Int, creatorId: Int, createTime: DateTime) {
+    suspend fun createBuilds(branch: String, jobId: Int, tag: String, result: String?, status: String, applicationId: Int, creatorId: Int, createTime: DateTime) {
         db.execute {
             Builds.insert {
                 it[this.branch] = branch
+                it[this.jobId] = EntityID(jobId, Jobs)
                 it[this.tag] = tag
                 it[this.result] = result
                 it[this.status] = status
@@ -34,6 +36,7 @@ class BuildDao(private val db: DB) {
                     BuildInfo (
                         id = it[Builds.id].value,
                         branch = it[Builds.branch],
+                        jobId = it[Builds.jobId].value,
                         tag = it[Builds.tag],
                         buildNumber = 0, /** Need to put correct value **/
                         creatorName = it[Users.name],
@@ -58,6 +61,7 @@ class BuildDao(private val db: DB) {
                 BuildInfo (
                     id = it[Builds.id].value,
                     branch = it[Builds.branch],
+                    jobId = it[Builds.jobId].value,
                     tag = it[Builds.tag],
                     buildNumber = 0, /** Need to put correct value **/
                     creatorName = it[Users.name],
@@ -86,6 +90,7 @@ class BuildDao(private val db: DB) {
             BuildInfo (
                 id = it[Builds.id].value,
                 branch = it[Builds.branch],
+                jobId = it[Builds.jobId].value,
                 tag = it[Builds.tag],
                 buildNumber = 0, /** Need to put correct value **/
                 creatorName = it[Users.name],
@@ -113,6 +118,7 @@ class BuildDao(private val db: DB) {
             BuildInfo (
                 id = it[Builds.id].value,
                 branch = it[Builds.branch],
+                jobId = it[Builds.jobId].value,
                 tag = it[Builds.tag],
                 buildNumber = 0, /** Need to put correct value **/
                 creatorName = it[Users.name],

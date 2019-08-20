@@ -18,6 +18,7 @@ val ServiceModule = module {
         BuildCheckService(
             get(),
             get(),
+            get(),
             intervalDelayTime = getInt("jenkins.build.intervalDelayTime") ?: 1000,
             intervalCheckHealthTime = getInt("jenkins.build.intervalCheckHealthTime") ?: 60000
         )

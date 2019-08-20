@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS Templates;
 DROP TABLE IF EXISTS Builds;
 DROP TABLE IF EXISTS Users;
 DROP TABLE IF EXISTS `Groups`;
+DROP TABLE IF EXISTS Jobs;
 DROP TABLE IF EXISTS Applications;
 
 CREATE TABLE Applications(
@@ -34,9 +35,21 @@ CREATE TABLE Users(
 );
 
 
+CREATE TABLE Jobs(
+     id INT AUTO_INCREMENT PRIMARY KEY,
+     branch VARCHAR(128) NOT NULL,
+     application_id INT,
+     last_build_number INT DEFAULT 0,
+     tag VARCHAR(128) DEFAULT 'lts',
+
+     FOREIGN KEY (application_id) REFERENCES Applications(id)
+);
+
+
 CREATE TABLE Builds(
     id INT AUTO_INCREMENT PRIMARY KEY,
     branch VARCHAR(128) NOT NULL,
+    job_id INT,
     tag VARCHAR(32) NOT NULL,
     result TEXT,
     status VARCHAR(10) NOT NULL,
@@ -47,7 +60,8 @@ CREATE TABLE Builds(
     finish_time DATETIME,
 
     FOREIGN KEY (application_id) REFERENCES Applications(id),
-    FOREIGN KEY (creator_id) REFERENCES Users(id)
+    FOREIGN KEY (creator_id) REFERENCES Users(id),
+    FOREIGN KEY (job_id) REFERENCES Jobs(id)
 );
 
 CREATE TABLE Templates(

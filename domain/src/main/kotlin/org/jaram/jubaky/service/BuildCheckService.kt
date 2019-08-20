@@ -14,13 +14,14 @@ import org.jaram.jubaky.enumuration.toBuildStatus
 import org.jaram.jubaky.repository.ApplicationRepository
 import org.jaram.jubaky.repository.BuildRepository
 import org.jaram.jubaky.repository.JenkinsRepository
+import org.jaram.jubaky.repository.JobRepository
 import org.joda.time.DateTime
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 class BuildCheckService(
     private val buildRepository: BuildRepository,
     private val applicationRepository: ApplicationRepository,
+    private val jobRepository: JobRepository,
     private val intervalDelayTime: Int,
     private val intervalCheckHealthTime: Int
 ) {
@@ -104,24 +105,24 @@ class BuildCheckService(
                  * @TODO
                  * Deep clone and doing post
                  */
-                buildEventBus.post(
-                    mapOf(
-                        "abortedBuildList" to abortedBuildList,
-                        "pendingBuildList" to pendingBuildList,
-                        "progressBuildList" to progressBuildList,
-                        "successBuildList" to successBuildList,
-                        "failureBuildList" to failureBuildList
-                    )
-                )
+//                buildEventBus.post(
+//                    mapOf(
+//                        "abortedBuildList" to abortedBuildList,
+//                        "pendingBuildList" to pendingBuildList,
+//                        "progressBuildList" to progressBuildList,
+//                        "successBuildList" to successBuildList,
+//                        "failureBuildList" to failureBuildList
+//                    )
+//                )
 
-//                println(mapOf(
-//                    "abortedBuildList" to abortedBuildList,
-//                    "pendingBuildList" to pendingBuildList,
-//                    "progressBuildList" to progressBuildList,
-//                    "successBuildList" to successBuildList,
-//                    "failureBuildList" to failureBuildList
-//                ))
-//                println(jenkinsRepository.getPendingBuildList())
+                println(mapOf(
+                    "abortedBuildList" to abortedBuildList,
+                    "pendingBuildList" to pendingBuildList,
+                    "progressBuildList" to progressBuildList,
+                    "successBuildList" to successBuildList,
+                    "failureBuildList" to failureBuildList
+                ))
+                println(jenkinsRepository.getPendingBuildList())
 
                 abortedBuildList.clear()
                 successBuildList.clear()
@@ -161,11 +162,19 @@ class BuildCheckService(
     }
 
     private suspend fun updateDatabase(build: Build) {
+        val applicationInfo = applicationRepository.getApplicationInfo(build.applicationName)
+
         buildRepository.updateBuildStatus(
             build.buildId,
             buildStatusToString(build.status),
             DateTime(build.startTime),
             DateTime(build.endTime)
+        )
+
+        jobRepository.updateJob(
+            applicationId = applicationInfo.id,
+            branch = build.branch,
+            lastBuildNumber = build.buildNumber + 1
         )
     }
 
