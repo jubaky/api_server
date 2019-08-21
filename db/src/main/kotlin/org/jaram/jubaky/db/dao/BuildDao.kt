@@ -42,8 +42,8 @@ class BuildDao(private val db: DB) {
                         startTime = it[Builds.startTime],
                         endTime = it[Builds.finishTime],
                         applicationName = it[Applications.name],
-                        /** Need to put correct values **/
                         status = toBuildStatus(it[Builds.status]),
+                        /** Need to put correct values **/
                         progressRate = 100.0,
                         recentHistory = listOf(BuildInfo.BuildHistoryItem (
                             duration = 1,
@@ -68,8 +68,8 @@ class BuildDao(private val db: DB) {
                     startTime = it[Builds.startTime],
                     endTime = it[Builds.finishTime],
                     applicationName = it[Applications.name],
-                    /** Need to put correct values **/
                     status = toBuildStatus(it[Builds.status]),
+                    /** Need to put correct values **/
                     progressRate = 100.0,
                     recentHistory = listOf(
                         BuildInfo.BuildHistoryItem(
@@ -97,8 +97,8 @@ class BuildDao(private val db: DB) {
                 startTime = it[Builds.startTime],
                 endTime = it[Builds.finishTime],
                 applicationName = it[Applications.name],
-                /** Need to put correct values **/
                 status = toBuildStatus(it[Builds.status]),
+                /** Need to put correct values **/
                 progressRate = 100.0,
                 recentHistory = listOf(
                     BuildInfo.BuildHistoryItem(
@@ -125,8 +125,8 @@ class BuildDao(private val db: DB) {
                 startTime = it[Builds.startTime],
                 endTime = it[Builds.finishTime],
                 applicationName = it[Applications.name],
-                /** Need to put correct values **/
                 status = toBuildStatus(it[Builds.status]),
+                /** Need to put correct values **/
                 progressRate = 100.0,
                 recentHistory = listOf(
                     BuildInfo.BuildHistoryItem(

@@ -14,8 +14,8 @@ class BuildService(
     private val userRepository: UserRepository
 ) {
 
-    suspend fun getRecentBuildList(emailId: String, applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {
-        val userInfo = userRepository.getUserInfo(emailId)
+    suspend fun getRecentBuildList(userId: Int, applicationId: Int, count: Int, branch: String? = null): List<BuildInfo> {
+        val userInfo = userRepository.getUserInfo(userId)
         val userGroupId = userRepository.getUserGroupId(userInfo.groupName)
 
         return buildRepository.getRecentBuildList(applicationId, userGroupId, count, branch)

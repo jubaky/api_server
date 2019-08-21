@@ -19,7 +19,6 @@ class UserDao(private val db: DB) {
                 it[this.emailId] = emailId
                 it[this.password] = password
                 it[this.name] = name
-                it[this.createTime] = DateTime.now()
             }
         }
     }
@@ -71,16 +70,15 @@ class UserDao(private val db: DB) {
         }.empty()
     }
 
-    suspend fun isValidCredentials(emailId: String, password: ByteArray) = db.read {
+    suspend fun isValidCredentials(emailId: String, password: ByteArray): Boolean = db.read {
         Users.slice(Users.password).select {
-            (Users.isDisabled eq false)
-                .and(Users.emailId eq emailId)
+            Users.isDisabled.eq(false) and Users.emailId.eq(emailId)
         }.firstOrNull()?.get(Users.password)?.contentEquals(password) == true
     }
 
-    suspend fun getUserInfo(emailId: String): User = db.read {
+    suspend fun getUserInfo(userId: Int): User = db.read {
         Users.innerJoin(GroupMembers).innerJoin(Groups).select {
-            Users.emailId.eq(emailId)
+            Users.id.eq(userId)
         }.map {
             User (
                 emailId = it[Users.emailId],
@@ -93,5 +91,13 @@ class UserDao(private val db: DB) {
 
     suspend fun getUserGroupId(groupName: String): Int = db.read {
         Groups.slice(Groups.id).select { Groups.name.eq(groupName) }.map { it[Groups.id].value }.first()
+    }
+
+    suspend fun getUserId(emailId: String): Int = db.read {
+        Users.select {
+            Users.emailId.eq(emailId)
+        }.map {
+            it[Users.id].value
+        }.first()
     }
 }

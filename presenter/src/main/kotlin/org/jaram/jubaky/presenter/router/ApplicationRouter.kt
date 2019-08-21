@@ -1,19 +1,25 @@
 package org.jaram.jubaky.presenter.router
 
+import io.ktor.application.call
 import io.ktor.routing.*
+import io.ktor.sessions.get
+import io.ktor.sessions.sessions
 import org.jaram.jubaky.domain.jenkins.BuildArgument
 import org.jaram.jubaky.domain.jenkins.Credentials
 import org.jaram.jubaky.domain.jenkins.DockerArgument
 import org.jaram.jubaky.domain.jenkins.JobConfig
+import org.jaram.jubaky.domain.session.UserSession
 import org.jaram.jubaky.presenter.ext.*
 import org.jaram.jubaky.service.ApplicationService
 import org.jaram.jubaky.service.BuildService
 import org.jaram.jubaky.service.DeployService
+import org.jaram.jubaky.service.UserService
 
 fun Route.app(
     applicationService: ApplicationService,
     buildService: BuildService,
-    deployService: DeployService
+    deployService: DeployService,
+    userService: UserService
 ) {
     get {
         response(applicationService.getApplicationList())
@@ -59,13 +65,12 @@ fun Route.app(
                 val applicationId = pathParam("applicationId").toInt()
                 val topSize = queryParamSafe("top")?.toIntOrNull() ?: 10
 
-                /**
-                 * @TODO
-                 * eamil 받아와야 함
-                 */
-                val emailId = ""
+                val session = call.sessions.get<UserSession>()
+                val userId = userService.getUserId(session?.emailId)
 
-                response(buildService.getRecentBuildList(emailId, applicationId, topSize))
+                response(
+                    buildService.getRecentBuildList(userId, applicationId, topSize)
+                )
             }
 
             get("/{buildId}") {
@@ -78,17 +83,14 @@ fun Route.app(
                 val topSize = queryParamSafe("top")?.toIntOrNull() ?: 10
                 val namespace = queryParamSafe("namespace")
 
-                /**
-                 * @TODO
-                 * 파라미터 받아야 함, 아니면 SQL 만들 것
-                 */
+                val session = call.sessions.get<UserSession>()
+                val userId = userService.getUserId(session?.emailId)
 
-                val emailId = ""
                 val buildId = 1
                 val applicationId = 1
 
                 response(
-                    deployService.getRecentDeployList(emailId, buildId, applicationId, topSize, namespace)
+                    deployService.getRecentDeployList(userId, buildId, applicationId, topSize, namespace)
                 )
             }
 
@@ -111,15 +113,12 @@ fun Route.app(
             }
 
             get("/build") {
-                /**
-                 * @TODO
-                 * emailId 받아와야 함
-                 */
-                val emailId = ""
+                val session = call.sessions.get<UserSession>()
+                val userId = userService.getUserId(session?.emailId)
 
                 response(
                     buildService.getRecentBuildList(
-                        emailId,
+                        userId,
                         pathParam("applicationId").toInt(),
                         queryParamSafe("top")?.toIntOrNull() ?: 10,
                         queryParam("branch_name")

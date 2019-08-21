@@ -46,7 +46,7 @@ class JubakyServer(
                 route("/user") { user(userService) }
                 route("/dev") { dev(jenkinsService) }
                 route("/infra") { infra(kubernetesService) }
-                route("/app") { app(applicationService, buildService, deployService) }
+                route("/app") { app(applicationService, buildService, deployService, userService) }
             }
         }
     }

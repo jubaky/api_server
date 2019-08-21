@@ -17,7 +17,9 @@ interface UserRepository {
 
     suspend fun updateLastLoginTime(emailId: String, time: DateTime)
 
-    suspend fun getUserInfo(emailId: String): User
+    suspend fun getUserInfo(userId: Int): User
 
     suspend fun getUserGroupId(groupName: String): Int
+
+    suspend fun getUserId(emailId: String): Int
 }

@@ -32,11 +32,15 @@ class UserRepositoryImpl(
         userDao.updateLastLoginTime(emailId, time)
     }
 
-    override suspend fun getUserInfo(emailId: String): User {
-        return userDao.getUserInfo(emailId)
+    override suspend fun getUserInfo(userId: Int): User {
+        return userDao.getUserInfo(userId)
     }
 
     override suspend fun getUserGroupId(groupName: String): Int {
         return userDao.getUserGroupId(groupName)
+    }
+
+    override suspend fun getUserId(emailId: String): Int {
+        return userDao.getUserId(emailId)
     }
 }
