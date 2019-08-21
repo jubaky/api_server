@@ -31,7 +31,7 @@ CREATE TABLE `Groups`(
 CREATE TABLE Users(
     id INT AUTO_INCREMENT,
     email_id VARCHAR(256) UNIQUE NOT NULL,
-    password BINARY(128) NOT NULL,
+    password INT NOT NULL,
     name VARCHAR(30) NOT NULL,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_login_time DATETIME,

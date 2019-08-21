@@ -16,6 +16,7 @@ import org.jaram.jubaky.repository.BuildRepository
 import org.jaram.jubaky.repository.JenkinsRepository
 import org.jaram.jubaky.repository.JobRepository
 import org.joda.time.DateTime
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 class BuildCheckService(
@@ -30,11 +31,11 @@ class BuildCheckService(
 
     val buildEventBus = EventBus("BuildEventBus")
 
-    private val abortedBuildList = ArrayList<Build>()
-    private val pendingBuildList = ArrayList<Build>()
-    private val progressBuildList = ArrayList<Build>()
-    private val successBuildList = ArrayList<Build>()
-    private val failureBuildList = ArrayList<Build>()
+    private val abortedBuildList = CopyOnWriteArrayList<Build>()
+    private val pendingBuildList = CopyOnWriteArrayList<Build>()
+    private val progressBuildList = CopyOnWriteArrayList<Build>()
+    private val successBuildList = CopyOnWriteArrayList<Build>()
+    private val failureBuildList = CopyOnWriteArrayList<Build>()
 
     private lateinit var buildCheckJob: Job
     private lateinit var checkHealthJob: Job
@@ -42,63 +43,83 @@ class BuildCheckService(
     fun runBuildCheck() {
         buildCheckJob = CoroutineScope(Dispatchers.IO).launch {
             while (true) {
-                // Check the pending build list
-                val pendingBuildIdxList = mutableListOf<Int>()
+                // Check pending queue
+                val pendingBuildRemovalIdxList = mutableListOf<Int>()
                 val pendingBuildListInJenkins = jenkinsRepository.getPendingBuildList()
+                val pendingBuildListTemp = mutableListOf<Build>()
 
-                pendingBuildList.forEach { pendingBuild ->
+                for (i in 0 until pendingBuildList.size) {
+                    val pendingBuild = pendingBuildList[i]
                     val branchedJobName = jenkinsRepository.replaceNameWithBranch(pendingBuild.applicationName, pendingBuild.branch)
 
-                    if (!pendingBuildListInJenkins.contains(branchedJobName))  // If PENDING -> PROGRESS
-                        pendingBuildIdxList.add(pendingBuildList.indexOf(pendingBuild))
+                    if (!pendingBuildListInJenkins.contains(branchedJobName)) {  // If PENDING -> PROGRESS
+                        pendingBuildListTemp.add(
+                            Build(
+                                buildId = pendingBuild.buildId,
+                                jobId = pendingBuild.jobId,
+                                applicationName = pendingBuild.applicationName,
+                                branch = pendingBuild.branch,
+                                buildNumber = pendingBuild.buildNumber,
+                                status = BuildStatus.PROGRESS,
+                                createTime = pendingBuild.createTime,
+                                startTime = System.currentTimeMillis(),
+                                endTime = 0,
+                                progressRate = 100.0
+                            )
+                        )
+
+                        pendingBuildRemovalIdxList.add(i)
+                    }
                 }
 
-                pendingBuildIdxList.forEach { idx ->
-                    val progressBuild = pendingBuildList.removeAt(idx)
+                pendingBuildListTemp.forEach { build -> progressBuildList.add(build)}
+                pendingBuildRemovalIdxList.forEach { idx -> pendingBuildList.removeAt(idx) }
 
-                    progressBuildList.add(progressBuild)
-                }
+                pendingBuildList.forEach { build -> updateBuildStatus(build) }
+                TimeUnit.MILLISECONDS.sleep(200)
 
                 TimeUnit.MILLISECONDS.sleep(intervalDelayTime.toLong())
 
-                // Check build queue lists
-                val abortedBuildIdxList = mutableListOf<Int>()
-                val successBuildIdxList = mutableListOf<Int>()
-                val failureBuildIdxList = mutableListOf<Int>()
+                // Check build queue
+                progressBuildList.forEach { build -> updateBuildStatus(build) }
+                TimeUnit.MILLISECONDS.sleep(200)
 
-                for (i in 0 until progressBuildList.size) {
-                    val build: Build = progressBuildList[i]
+                val progressBuildListTemp = mutableListOf<Build>()
+                val progressBuildIdxList = mutableListOf<Int>()
+
+                progressBuildList.forEach { build -> progressBuildListTemp.add(build) }
+
+                for (i in 0 until progressBuildListTemp.size) {
+                    val build = progressBuildListTemp[i]
                     val applicationInfo = applicationRepository.getApplicationInfo(build.applicationName)
-
-                    val job = jenkinsRepository.getJob(applicationInfo.id, build.branch)
+                    val jobInfo = jobRepository.getJobInfo(applicationInfo.id, build.branch)
                     val jobSpec = jenkinsRepository.getJobSpec(applicationInfo.id, build.branch, build.buildNumber)
 
                     when (toBuildStatus(jobSpec.result)) {
-                        BuildStatus.ABORTED -> abortedBuildIdxList.add(progressBuildList.indexOf(build))
-                        BuildStatus.SUCCESS -> successBuildIdxList.add(progressBuildList.indexOf(build))
-                        BuildStatus.FAILURE -> failureBuildIdxList.add(progressBuildList.indexOf(build))
+                        BuildStatus.ABORTED -> {
+                            abortedBuildList.add(toBuild(build.buildId, jobInfo, jobSpec))
+                            progressBuildIdxList.add(i)
+                        }
+                        BuildStatus.SUCCESS -> {
+                            successBuildList.add(toBuild(build.buildId, jobInfo, jobSpec))
+                            progressBuildIdxList.add(i)
+                        }
+                        BuildStatus.FAILURE -> {
+                            failureBuildList.add(toBuild(build.buildId, jobInfo, jobSpec))
+                            progressBuildIdxList.add(i)
+                        }
                         BuildStatus.PENDING -> {}
                         BuildStatus.PROGRESS -> {}
                         BuildStatus.UNKNOWN -> {}  // Throw an Exception ?
                     }
-
-                    progressBuildList[i] = toBuild(build.buildId, job, jobSpec)
                 }
 
-                abortedBuildIdxList.forEach { idx -> abortedBuildList.add(progressBuildList.removeAt(idx)) }
-                successBuildIdxList.forEach { idx -> successBuildList.add(progressBuildList.removeAt(idx)) }
-                failureBuildIdxList.forEach { idx -> failureBuildList.add(progressBuildList.removeAt(idx)) }
-
                 // Update data to DB
-                abortedBuildList.forEach { build -> updateDatabase(build) } // Update Status
+                abortedBuildList.forEach { build -> updateBuildStatus(build) } // Update Status
                 TimeUnit.MILLISECONDS.sleep(200)
-                pendingBuildList.forEach { build -> updateBuildStatus(build) }
+                successBuildList.forEach { build -> updateBuildStatus(build) }
                 TimeUnit.MILLISECONDS.sleep(200)
-                progressBuildList.forEach { build -> updateBuildStatus(build) }
-                TimeUnit.MILLISECONDS.sleep(200)
-                successBuildList.forEach { build -> updateDatabase(build) }
-                TimeUnit.MILLISECONDS.sleep(200)
-                failureBuildList.forEach { build -> updateDatabase(build) }
+                failureBuildList.forEach { build -> updateBuildStatus(build) }
                 TimeUnit.MILLISECONDS.sleep(200)
 
                 /**
@@ -127,6 +148,7 @@ class BuildCheckService(
                 abortedBuildList.clear()
                 successBuildList.clear()
                 failureBuildList.clear()
+                progressBuildIdxList.forEach { idx -> progressBuildList.removeAt(idx) }
 
                 TimeUnit.MILLISECONDS.sleep(intervalDelayTime.toLong())
             }
@@ -153,7 +175,7 @@ class BuildCheckService(
         checkHealthJob.cancel()
     }
 
-    fun getPendingBuildList(): ArrayList<Build> {
+    fun getPendingBuildList(): CopyOnWriteArrayList<Build> {
         return pendingBuildList
     }
 
@@ -167,18 +189,6 @@ class BuildCheckService(
             buildStatusToString(build.status),
             DateTime(build.startTime),
             DateTime(build.endTime)
-        )
-    }
-
-    private suspend fun updateDatabase(build: Build) {
-        val applicationInfo = applicationRepository.getApplicationInfo(build.applicationName)
-
-        updateBuildStatus(build)
-
-        jobRepository.updateJob(
-            applicationId = applicationInfo.id,
-            branch = build.branch,
-            lastBuildNumber = build.buildNumber + 1
         )
     }
 

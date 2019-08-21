@@ -113,7 +113,7 @@ class BuildDao(private val db: DB) {
     suspend fun getBuildInfo(applicationId: Int, branch: String): BuildInfo = db.read {
         Builds.innerJoin(Users).innerJoin(Applications).select {
             Builds.application.eq(applicationId) and Builds.branch.eq(branch)
-        }.map {
+        }.orderBy(Builds.id to SortOrder.DESC).map {
             BuildInfo (
                 id = it[Builds.id].value,
                 branch = it[Builds.branch],

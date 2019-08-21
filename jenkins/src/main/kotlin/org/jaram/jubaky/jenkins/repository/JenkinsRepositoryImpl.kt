@@ -264,8 +264,6 @@ class JenkinsRepositoryImpl(
         updateConfigXml(file, updatedFile, configData)
         val fileRequestBody = RequestBody.create(MediaType.parse("application/octet-stream"), updatedFile)
 
-        println(branchedJobName)
-
         val request = jenkinsClientWithJson.createJob(branchedJobName, fileRequestBody)
         val response = request.await()
 
@@ -324,7 +322,7 @@ class JenkinsRepositoryImpl(
 
         val branchedJobName = replaceNameWithBranch(jobName, branchName)
         val buildArgumentMap = mutableMapOf<String, String>()
-        buildArgumentList.map {
+        buildArgumentList.forEach {
             buildArgumentMap[it.name ?: ""] = it.defaultValue ?: ""
         }
 
@@ -362,10 +360,10 @@ class JenkinsRepositoryImpl(
 
             val buildInfo = buildRepository.getBuildInfo(applicationId, branchName)
 
-
             buildCheckService.getPendingBuildList().add(
                 Build(
                     buildId = buildInfo.id,
+                    jobId = buildInfo.jobId,
                     applicationName = jobName,
                     branch = branchName,
                     buildNumber = currentBuildNumber,
