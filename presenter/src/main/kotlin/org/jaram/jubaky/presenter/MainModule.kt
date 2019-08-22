@@ -45,6 +45,10 @@ fun Application.serverModule(
         mdc("clientIp") { it.request.origin.remoteHost }
     }
 
+    install(CORS) {
+        anyHost()
+    }
+
     install(AutoHeadResponse)
 
     install(ContentNegotiation) {
