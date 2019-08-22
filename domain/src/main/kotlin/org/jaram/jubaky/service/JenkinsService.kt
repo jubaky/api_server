@@ -13,21 +13,21 @@ class JenkinsService(
         jenkinsRepository.redirectGithubWebhook(headers, payload)
     }
 
-    suspend fun getJob(jobName: String, branchName: String): Job {
-        return jenkinsRepository.getJob(jobName, branchName)
-    }
-
-    suspend fun getJobSpec(jobName: String, branchName: String, buildNumber: Int): JobSpec {
-        return jenkinsRepository.getJobSpec(jobName, branchName, buildNumber)
-    }
-
-    suspend fun getJobLog(jobName: String, branchName: String, buildNumber: Int): JobLog {
-        return jenkinsRepository.getJobLog(jobName, branchName, buildNumber)
-    }
-
-    suspend fun createJob(jobName: String, configData: JobConfig) {
-        jenkinsRepository.createJob(jobName, configData)
-    }
+//    suspend fun getJob(jobName: String, branchName: String): Job {
+//        return jenkinsRepository.getJob(jobName, branchName)
+//    }
+//
+//    suspend fun getJobSpec(jobName: String, branchName: String, buildNumber: Int): JobSpec {
+//        return jenkinsRepository.getJobSpec(jobName, branchName, buildNumber)
+//    }
+//
+//    suspend fun getJobLog(jobName: String, branchName: String, buildNumber: Int): JobLog {
+//        return jenkinsRepository.getJobLog(jobName, branchName, buildNumber)
+//    }
+//
+//    suspend fun createJob(jobName: String, configData: JobConfig) {
+//        jenkinsRepository.createJob(jobName, configData)
+//    }
 
     suspend fun deleteJob(jobName: String, branchName: String) {
         jenkinsRepository.deleteJob(jobName, branchName)
@@ -37,9 +37,9 @@ class JenkinsService(
         jenkinsRepository.updateJob(jobName, configData)
     }
 
-    suspend fun buildWithParameters(buildInfo: BuildInfo, branchName: String, buildArgumentList: List<BuildArgument>) {
-        jenkinsRepository.buildWithParameters(buildInfo, buildArgumentList)
-    }
+//    suspend fun buildWithParameters(buildInfo: BuildInfo, buildArgumentList: List<BuildArgument>) {
+//        jenkinsRepository.buildWithParameters(buildInfo, buildArgumentList)
+//    }
 
     suspend fun getPendingBuildList(): List<String> {
         return jenkinsRepository.getPendingBuildList()

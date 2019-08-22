@@ -12,4 +12,5 @@ val DBModule = module {
     single { UserDao(get(named("jubaky-db"))) }
     single { TemplateDao(get(named("jubaky-db"))) }
     single { CredentialDao(get(named("jubaky-db"))) }
+    single { JobDao(get(named("jubaky-db"))) }
 }

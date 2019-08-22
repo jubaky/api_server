@@ -1,22 +1,23 @@
 package org.jaram.jubaky.db.dao
 
 import org.jaram.jubaky.db.DB
-import org.jaram.jubaky.db.table.Applications
-import org.jaram.jubaky.db.table.Builds
-import org.jaram.jubaky.db.table.Users
+import org.jaram.jubaky.db.table.*
 import org.jaram.jubaky.enumuration.BuildStatus
+import org.jaram.jubaky.enumuration.toBuildStatus
 import org.jaram.jubaky.protocol.BuildInfo
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
 import org.joda.time.DateTime
 
 class BuildDao(private val db: DB) {
-    suspend fun createBuilds(branch: String, tag: String, result: String?, applicationId: Int, creatorId: Int, createTime: DateTime) {
+    suspend fun createBuilds(branch: String, jobId: Int, tag: String, result: String?, status: String, applicationId: Int, creatorId: Int, createTime: DateTime) {
         db.execute {
             Builds.insert {
                 it[this.branch] = branch
+                it[this.jobId] = EntityID(jobId, Jobs)
                 it[this.tag] = tag
                 it[this.result] = result
+                it[this.status] = status
                 it[this.application] = EntityID(applicationId, Applications)
                 it[this.creator] = EntityID(creatorId, Users)
                 it[this.createTime] = createTime
@@ -24,23 +25,25 @@ class BuildDao(private val db: DB) {
         }
     }
 
-    suspend fun getRecentBuildList(applicationId: Int, count: Int, branch: String?): List<BuildInfo> {
+    suspend fun getRecentBuildList(applicationId: Int, userGroupId: Int, count: Int, branch: String?): List<BuildInfo> {
         if (branch == null)
             return db.read {
-                Builds.innerJoin(Users).innerJoin(Applications).select {
-                    Builds.application.eq(applicationId)
-                }.orderBy(Builds.createTime to SortOrder.DESC).map {
+                Builds.innerJoin(Users).innerJoin(Applications).innerJoin(Permissions).select {
+                    Builds.application.eq(applicationId) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+                }.orderBy(Builds.createTime to SortOrder.DESC).limit(count).map {
                     BuildInfo (
                         id = it[Builds.id].value,
                         branch = it[Builds.branch],
+                        jobId = it[Builds.jobId].value,
+                        tag = it[Builds.tag],
                         buildNumber = 0, /** Need to put correct value **/
                         creatorName = it[Users.name],
                         createTime = it[Builds.createTime],
                         startTime = it[Builds.startTime],
                         endTime = it[Builds.finishTime],
                         applicationName = it[Applications.name],
+                        status = toBuildStatus(it[Builds.status]),
                         /** Need to put correct values **/
-                        status = BuildStatus.SUCCESS,
                         progressRate = 100.0,
                         recentHistory = listOf(BuildInfo.BuildHistoryItem (
                             duration = 1,
@@ -48,22 +51,25 @@ class BuildDao(private val db: DB) {
                         ))
                     )
                 }
-            }.subList(0, count)
+            }
+
         return db.read {
             Builds.innerJoin(Users).innerJoin(Applications).select {
-                Builds.application.eq(applicationId) and Builds.branch.eq(branch)
-            }.orderBy(Builds.createTime to SortOrder.DESC).map {
+                Builds.application.eq(applicationId) and Builds.branch.eq(branch) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+            }.orderBy(Builds.createTime to SortOrder.DESC).limit(count).map {
                 BuildInfo (
                     id = it[Builds.id].value,
                     branch = it[Builds.branch],
+                    jobId = it[Builds.jobId].value,
+                    tag = it[Builds.tag],
                     buildNumber = 0, /** Need to put correct value **/
                     creatorName = it[Users.name],
                     createTime = it[Builds.createTime],
                     startTime = it[Builds.startTime],
                     endTime = it[Builds.finishTime],
                     applicationName = it[Applications.name],
+                    status = toBuildStatus(it[Builds.status]),
                     /** Need to put correct values **/
-                    status = BuildStatus.SUCCESS,
                     progressRate = 100.0,
                     recentHistory = listOf(
                         BuildInfo.BuildHistoryItem(
@@ -72,7 +78,7 @@ class BuildDao(private val db: DB) {
                         )
                     )
                 )
-            }.subList(0, count)
+            }
         }
     }
 
@@ -83,14 +89,16 @@ class BuildDao(private val db: DB) {
             BuildInfo (
                 id = it[Builds.id].value,
                 branch = it[Builds.branch],
+                jobId = it[Builds.jobId].value,
+                tag = it[Builds.tag],
                 buildNumber = 0, /** Need to put correct value **/
                 creatorName = it[Users.name],
                 createTime = it[Builds.createTime],
                 startTime = it[Builds.startTime],
                 endTime = it[Builds.finishTime],
                 applicationName = it[Applications.name],
+                status = toBuildStatus(it[Builds.status]),
                 /** Need to put correct values **/
-                status = BuildStatus.SUCCESS,
                 progressRate = 100.0,
                 recentHistory = listOf(
                     BuildInfo.BuildHistoryItem(
@@ -105,18 +113,20 @@ class BuildDao(private val db: DB) {
     suspend fun getBuildInfo(applicationId: Int, branch: String): BuildInfo = db.read {
         Builds.innerJoin(Users).innerJoin(Applications).select {
             Builds.application.eq(applicationId) and Builds.branch.eq(branch)
-        }.map {
+        }.orderBy(Builds.id to SortOrder.DESC).map {
             BuildInfo (
                 id = it[Builds.id].value,
                 branch = it[Builds.branch],
+                jobId = it[Builds.jobId].value,
+                tag = it[Builds.tag],
                 buildNumber = 0, /** Need to put correct value **/
                 creatorName = it[Users.name],
                 createTime = it[Builds.createTime],
                 startTime = it[Builds.startTime],
                 endTime = it[Builds.finishTime],
                 applicationName = it[Applications.name],
+                status = toBuildStatus(it[Builds.status]),
                 /** Need to put correct values **/
-                status = BuildStatus.SUCCESS,
                 progressRate = 100.0,
                 recentHistory = listOf(
                     BuildInfo.BuildHistoryItem(
@@ -126,6 +136,10 @@ class BuildDao(private val db: DB) {
                 )
             )
         }.first()
+    }
+
+    suspend fun getCreatorId(buildId: Int): Int = db.read {
+        Builds.innerJoin(Users).select { Builds.id.eq(buildId) }.first()[Users.id].value
     }
 
     suspend fun updateBuildStatus(buildId: Int, status: String, startTime: DateTime, endTime: DateTime) {

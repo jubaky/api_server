@@ -1,6 +1,8 @@
 package org.jaram.jubaky.repository
 
+import org.jaram.jubaky.domain.User
 import org.jaram.jubaky.domain.kubernetes.*
+import org.jaram.jubaky.protocol.DeployInfo
 
 interface KubernetesRepository {
 
@@ -18,9 +20,9 @@ interface KubernetesRepository {
 
     suspend fun getDeploymentList(namespace: String? = null): List<Deployment>
 
-    suspend fun createDeployment(yaml: String, namespace: String): Deployment
+    suspend fun createDeployment(buildId: Int, yaml: String, namespace: String): Deployment
 
-    suspend fun replaceDeployment(name: String, yaml: String, namespace: String): Deployment
+    suspend fun replaceDeployment(deployInfo: DeployInfo): Deployment
 
     suspend fun deleteDeployment(deploymentName: String, namespace: String)
 
@@ -91,4 +93,6 @@ interface KubernetesRepository {
     suspend fun replaceStatefulSet(name: String, yaml: String, namespace: String): StatefulSet
 
     suspend fun deleteStatefulSet(statefulSetName: String, namespace: String)
+
+    suspend fun createObject(buildId: Int, yaml: String, namespace: String)
 }

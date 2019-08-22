@@ -46,7 +46,7 @@ class JubakyServer(
                 route("/user") { user(userService) }
                 route("/dev") { dev(jenkinsService) }
                 route("/infra") { infra(kubernetesService) }
-                route("/app") { app(applicationService, buildService, deployService) }
+                route("/app") { app(applicationService, buildService, deployService, userService) }
             }
         }
     }
@@ -56,8 +56,6 @@ class JubakyServer(
 
         buildCheckService.runBuildCheck()
         logger.info("Build checker is started")
-        buildCheckService.runPendingBuildCheck()
-        logger.info("Pending build checker is started")
         buildCheckService.runCheckHealth()
         logger.info("Build health checker is started")
 
@@ -74,8 +72,6 @@ class JubakyServer(
 
         buildCheckService.stopBuildCheck()
         logger.info("Build checker is stopped")
-        buildCheckService.stopPendingBuildCheck()
-        logger.info("Pending build checker is stopped")
         buildCheckService.stopCheckHealth()
         logger.info("Build health checker is stopped")
 

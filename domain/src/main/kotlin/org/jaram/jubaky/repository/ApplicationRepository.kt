@@ -9,6 +9,8 @@ interface ApplicationRepository {
 
     suspend fun getApplicationInfo(applicationId: Int): Application
 
+    suspend fun getApplicationInfo(applicationName: String): Application
+
     suspend fun getGitRepositoryUrl(applicationId: Int): String
 
     suspend fun getUserId(applicationId: Int): Int

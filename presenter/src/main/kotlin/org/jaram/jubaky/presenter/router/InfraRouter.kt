@@ -92,9 +92,9 @@ fun Route.infra(kubernetesService: KubernetesService) {
             val namespaceName = pathParam("namespace", "default")
             val yaml = bodyParam("yaml")
 
-            response(
-                kubernetesService.createDeployment(yaml, namespaceName)
-            )
+//            response(
+//                kubernetesService.createDeployment(yaml, namespaceName)
+//            )
         }
 
         put("/{namespace}/{name}") {
@@ -102,9 +102,9 @@ fun Route.infra(kubernetesService: KubernetesService) {
             val objectName = pathParam("name")
             val yaml = bodyParam("yaml")
 
-            response(
-                kubernetesService.replaceDeployment(objectName, yaml, namespaceName)
-            )
+//            response(
+//                kubernetesService.replaceDeployment(objectName, yaml, namespaceName)
+//            )
         }
 
         delete("/{namespace}/{name}") {

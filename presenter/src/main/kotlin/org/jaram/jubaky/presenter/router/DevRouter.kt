@@ -45,9 +45,9 @@ fun Route.dev(jenkinsService: JenkinsService) {
             val jobName = pathParam("jobName")
             val branchName = pathParam("branchName")
 
-            response(
-                jenkinsService.getJob(jobName, branchName)
-            )
+//            response(
+//                jenkinsService.getJob(jobName, branchName)
+//            )
         }
 
         /**
@@ -61,9 +61,9 @@ fun Route.dev(jenkinsService: JenkinsService) {
             val branchName = pathParam("branchName")
             val buildNumber = pathParam("buildNumber").toInt()
 
-            response(
-                jenkinsService.getJobSpec(jobName, branchName, buildNumber)
-            )
+//            response(
+//                jenkinsService.getJobSpec(jobName, branchName, buildNumber)
+//            )
         }
 
         /**
@@ -77,9 +77,9 @@ fun Route.dev(jenkinsService: JenkinsService) {
             val branchName = pathParam("branchName")
             val buildNumber = pathParam("buildNumber").toInt()
 
-            response(
-                jenkinsService.getJobLog(jobName, branchName, buildNumber).log
-            )
+//            response(
+//                jenkinsService.getJobLog(jobName, branchName, buildNumber).log
+//            )
         }
 
         /**
@@ -139,7 +139,7 @@ fun Route.dev(jenkinsService: JenkinsService) {
             }
 
             val configData = JobConfig(
-                jobName = jobName,
+//                jobName = jobName,
                 description = bodyParam("description", "Job description"),
                 keepDependencies = bodyParam("keep_dependencies", "false"),
                 buildArgumentList = buildArgumentList,
@@ -151,9 +151,9 @@ fun Route.dev(jenkinsService: JenkinsService) {
                 dockerArgument = dockerArgument
             )
 
-            response(
-                jenkinsService.createJob(jobName, configData)
-            )
+//            response(
+//                jenkinsService.createJob(jobName, configData)
+//            )
         }
 
         /**
@@ -226,7 +226,7 @@ fun Route.dev(jenkinsService: JenkinsService) {
             }
 
             val configData = JobConfig(
-                jobName = jobName,
+//                jobName = jobName,
                 description = bodyParam("description", "Job description"),
                 keepDependencies = bodyParam("keep_dependencies", "false"),
                 buildArgumentList = buildArgumentList,
@@ -275,7 +275,7 @@ fun Route.dev(jenkinsService: JenkinsService) {
                     buildArgumentList.add(buildArgument)
                 }
             }
-//
+
 //            response(
 //                jenkinsService.buildWithParameters(jobName, branchName, buildArgumentList)
 //            )
@@ -329,3 +329,8 @@ fun Route.dev(jenkinsService: JenkinsService) {
         }
     }
 }
+
+/**
+ * @query
+ * - key : String
+ */

@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 
 object Permissions : IntIdTable("Permissions") {
-    val group = reference("group_id", Groups, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+    val groupId = reference("group_id", Groups, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
     val application = reference(
         "application_id",
         Applications,

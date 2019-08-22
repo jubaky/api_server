@@ -25,8 +25,10 @@ data class JobProtocol(
     val lastUnsuccessfulBuildNumber: Int?,
     val buildArgumentList: List<BuildArgument>
 ) {
-    fun toDomainModel() = Job(
+    fun toDomainModel(applicationId: Int, branch: String) = Job(
         name = name,
+        applicationId = applicationId,
+        branch = branch,
         description = description,
         buildable = buildable,
         concurrentBuild = concurrentBuild,

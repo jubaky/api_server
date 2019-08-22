@@ -13,8 +13,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.request.acceptLanguage
 import io.ktor.request.path
 import io.ktor.response.respond
+import io.ktor.sessions.Sessions
+import io.ktor.sessions.cookie
 import org.jaram.jubaky.ApiException
 import org.jaram.jubaky.UnhandledException
+import org.jaram.jubaky.domain.session.UserSession
 import org.jaram.jubaky.presenter.converter.ResponseConverter
 import org.jaram.jubaky.util.Jackson
 import org.jaram.jubaky.service.TokenService
@@ -95,5 +98,9 @@ fun Application.serverModule(
                 if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
             }
         }
+    }
+
+    install(Sessions) {
+        cookie<UserSession>("User")
     }
 }

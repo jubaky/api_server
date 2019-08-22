@@ -17,7 +17,7 @@ class TemplateDao(private val db: DB) {
             Templates.insert {
                 it[this.name] = name
                 it[this.kind] = kind
-                it[this.content] = content
+                it[this.yaml] = content
                 it[this.application] = EntityID(applicationId, Applications)
             }
         }
@@ -32,7 +32,7 @@ class TemplateDao(private val db: DB) {
                 name = it[Templates.name],
                 /** Need to put correct value **/
                 kind = Kind.DEPLOYMENT,
-                yaml = it[Templates.content],
+                yaml = it[Templates.yaml],
                 applicationName = it[Applications.name],
                 createTime = it[Templates.createTime]
             )
@@ -45,6 +45,17 @@ class TemplateDao(private val db: DB) {
                 where = { Templates.id.eq(templateId) },
                 body = {
                     it[this.updateTime] = time
+                }
+            )
+        }
+    }
+
+    suspend fun updateTemplateYaml(templateId: Int, yaml: String) {
+        db.execute {
+            Templates.update (
+                where = { Templates.id.eq(templateId) },
+                body = {
+                    it[this.yaml] = yaml
                 }
             )
         }

@@ -2,6 +2,8 @@ package org.jaram.jubaky.domain.jenkins
 
 data class Job(
     val name: String,
+    val applicationId: Int,
+    val branch: String,
     val description: String?,
     val buildable: Boolean?,
     val concurrentBuild: Boolean?,

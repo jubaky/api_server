@@ -1,8 +1,7 @@
 package org.jaram.jubaky.domain.jenkins
 
 data class JobConfig(
-    val jobName: String,
-    val description: String = "Description of $jobName",
+    val description: String = "Description of Job",
     val keepDependencies: String = "false",
     val buildArgumentList: List<BuildArgument>,
     val githubUrl: String,

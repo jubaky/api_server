@@ -11,8 +11,8 @@ class CredentialRepositoryImpl(
         return credentialDao.getCredentialList(userId)
     }
 
-    override suspend fun createCredential(userId: Int, userName: String, password: String, key: String) {
-        credentialDao.createCredential(userId, userName, password, key)
+    override suspend fun createCredential(userName: String, password: String, key: String) {
+        credentialDao.createCredential(userName, password, key)
     }
 
     override suspend fun deleteCredential(key: String) {

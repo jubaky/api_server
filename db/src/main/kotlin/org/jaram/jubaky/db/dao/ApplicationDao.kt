@@ -22,7 +22,19 @@ class ApplicationDao(private val db: DB) {
     }
 
     suspend fun getApplicationInfo(applicationId: Int): Application = db.read {
-        Applications.selectAll().map {
+        Applications.select{ Applications.id.eq(applicationId) }.map {
+            Application(
+                id = it[Applications.id].value,
+                name = it[Applications.name],
+                gitRepositoryUrl = it[Applications.repositoryAddr],
+                /** Need to put correct value */
+                url = ""
+            )
+        }.first()
+    }
+
+    suspend fun getApplicationInfo(applicationName: String): Application = db.read {
+        Applications.select{ Applications.name.eq(applicationName) }.map {
             Application(
                 id = it[Applications.id].value,
                 name = it[Applications.name],
@@ -36,7 +48,7 @@ class ApplicationDao(private val db: DB) {
     suspend fun getUserId(applicationId: Int): Int = db.read {
         Applications.innerJoin(Permissions).innerJoin(Groups).innerJoin(GroupMembers).innerJoin(Users).select {
             Applications.id.eq(applicationId)
-        }.map { it[Users.id].value }.first()
+        }.first()[Users.id].value
     }
 
     suspend fun updateApplicationTime(applicationId: Int, time: DateTime) {

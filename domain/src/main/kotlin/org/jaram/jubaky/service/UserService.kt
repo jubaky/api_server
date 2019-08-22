@@ -1,5 +1,6 @@
 package org.jaram.jubaky.service
 
+import com.auth0.jwt.JWT
 import org.jaram.jubaky.AlreadyExistedUserException
 import org.jaram.jubaky.IncorrectEmailIdOrPasswordException
 import org.jaram.jubaky.IncorrectPasswordException
@@ -31,7 +32,7 @@ class UserService(
         userRepository.deleteUser(emailId)
     }
 
-    suspend fun loginUser(emailId: String, password: ByteArray, name: String): Map<String, Any> {
+    suspend fun loginUser(emailId: String, password: ByteArray, name: String): Map<String, String> {
         if (!userRepository.isValidCredentials(emailId, password)) {
             throw IncorrectEmailIdOrPasswordException()
         }
@@ -41,5 +42,13 @@ class UserService(
         val token = tokenService.createToken(emailId, name)
 
         return mapOf("emailId" to emailId, "name" to name, "token" to token)
+    }
+
+    fun getLoginUserEmailId(token: String?) = JWT.decode(token).getClaim("emailId").asString()
+
+    suspend fun getUserId(emailId: String?): Int {
+        if (emailId == null)
+            return 0
+        return userRepository.getUserId(emailId)
     }
 }

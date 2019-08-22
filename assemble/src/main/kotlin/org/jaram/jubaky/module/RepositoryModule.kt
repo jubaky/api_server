@@ -13,4 +13,5 @@ val RepositoryModule = module {
     singleBy<GitRepository, GitRepositoryImpl>()
     singleBy<TemplateRepository, TemplateRepositoryImpl>()
     singleBy<CredentialRepository, CredentialRepositoryImpl>()
+    singleBy<JobRepository, JobRepositoryImpl>()
 }

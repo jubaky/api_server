@@ -8,6 +8,7 @@ object Deploys : IntIdTable("Deploys") {
     val build = reference("build_id", Builds, onDelete = ReferenceOption.NO_ACTION, onUpdate = ReferenceOption.CASCADE)
     val namespace = varchar("namespace", 30)
     val status = varchar("status", 10)
+    val application = reference("application_id", Applications)
     val template = reference("template_id", Templates)
     val creator = reference(
         "creator_id",

@@ -35,13 +35,13 @@ class KubernetesService(
         return kubernetesRepository.getDeploymentList(namespace)
     }
 
-    suspend fun createDeployment(yaml: String, namespace: String): Deployment {
-        return kubernetesRepository.createDeployment(yaml, namespace)
-    }
-
-    suspend fun replaceDeployment(name: String, yaml: String, namespace: String): Deployment {
-        return kubernetesRepository.replaceDeployment(name, yaml, namespace)
-    }
+//    suspend fun createDeployment(yaml: String, namespace: String): Deployment {
+//        return kubernetesRepository.createDeployment(yaml, namespace)
+//    }
+//
+//    suspend fun replaceDeployment(name: String, yaml: String, namespace: String): Deployment {
+//        return kubernetesRepository.replaceDeployment(name, yaml, namespace)
+//    }
 
     suspend fun deleteDeployment(deploymentName: String, namespace: String) {
         return kubernetesRepository.deleteDeployment(deploymentName, namespace)

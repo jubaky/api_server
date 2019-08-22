@@ -3,7 +3,7 @@ package org.jaram.jubaky.service
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
-import org.joda.time.DateTime
+import java.util.*
 
 class TokenService(
     private val jwtIssuer: String,
@@ -11,20 +11,18 @@ class TokenService(
     private val jwtAudience: String,
     private val validityInMs: Int
 ){
-    private val algorithm: Algorithm = Algorithm.HMAC512(this.secret)
+    private val algorithm = Algorithm.HMAC512(this.secret)
 
-    fun createToken(emailId: String, name: String): String {
-        return JWT.create()
+    fun createToken(emailId: String, name: String) = JWT.create()
             .withSubject("Authentication")
             .withIssuer(jwtIssuer)
             .withAudience(jwtAudience)
             .withClaim("emailId", emailId)
             .withClaim("name", name)
-            .withExpiresAt(getExpiration().toDate())
+            .withExpiresAt(getExpiration())
             .sign(algorithm)
-    }
 
-    fun getExpiration() = DateTime(System.currentTimeMillis() + validityInMs)
+    fun getExpiration() = Date(System.currentTimeMillis() + validityInMs)
 
     fun getJWTVerifier(): JWTVerifier {
         return JWT.require(algorithm).withIssuer(jwtIssuer).build()

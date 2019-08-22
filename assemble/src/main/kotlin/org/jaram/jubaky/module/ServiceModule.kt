@@ -16,6 +16,9 @@ val ServiceModule = module {
 
     single {
         BuildCheckService(
+            get(),
+            get(),
+            get(),
             intervalDelayTime = getInt("jenkins.build.intervalDelayTime") ?: 1000,
             intervalCheckHealthTime = getInt("jenkins.build.intervalCheckHealthTime") ?: 60000
         )
@@ -23,6 +26,7 @@ val ServiceModule = module {
 
     single {
         DeployCheckService(
+            get(),
             intervalDelayTime = getInt("kubernetes.deploy.intervalDelayTime") ?: 1000,
             intervalCheckHealthTime = getInt("kubernetes.deploy.intervalCheckHealthTime") ?: 60000
         )

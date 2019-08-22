@@ -1,5 +1,6 @@
 package org.jaram.jubaky.repository
 
+import org.jaram.jubaky.domain.User
 import org.joda.time.DateTime
 
 interface UserRepository {
@@ -15,4 +16,10 @@ interface UserRepository {
     suspend fun isDuplicatedEmail(emailId: String): Boolean
 
     suspend fun updateLastLoginTime(emailId: String, time: DateTime)
+
+    suspend fun getUserInfo(userId: Int): User
+
+    suspend fun getUserGroupId(groupName: String): Int
+
+    suspend fun getUserId(emailId: String): Int
 }
