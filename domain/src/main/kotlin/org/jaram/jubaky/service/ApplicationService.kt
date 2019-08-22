@@ -24,8 +24,8 @@ class ApplicationService(
         return gitRepository.getBranchList(gitRepositoryUrl)
     }
 
-    suspend fun getCredentialList(): List<CredentialInfo> {
-        return credentialRepository.getCredentialList()
+    suspend fun getCredentialList(userId: Int): List<CredentialInfo> {
+        return credentialRepository.getCredentialList(userId)
     }
 
     suspend fun createCredentials(credentials: Credentials) {

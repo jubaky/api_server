@@ -120,6 +120,6 @@ class DeployDao(private val db: DB) {
     suspend fun getUserId(buildId: Int): Int = db.read {
         Deploys.innerJoin(Builds).innerJoin(Users).select{
             Deploys.build.eq(buildId)
-        }.map { it[Users.id].value }.first()
+        }.first()[Users.id].value
     }
 }

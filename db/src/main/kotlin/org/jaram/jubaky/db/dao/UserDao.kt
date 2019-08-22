@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.update
 import org.joda.time.DateTime
+import java.security.MessageDigest
 
 class UserDao(private val db: DB) {
 
@@ -17,10 +18,25 @@ class UserDao(private val db: DB) {
         db.execute {
             Users.insert {
                 it[this.emailId] = emailId
-                it[this.password] = password
+                it[this.password] = hashPassword(password)
                 it[this.name] = name
             }
         }
+    }
+
+    private fun hashPassword(password: ByteArray): String {
+        val HEX_CHARS = "0123456789ABCDEF"
+        val bytes = MessageDigest.getInstance("SHA-256").digest(password)
+        val result = StringBuilder(bytes.size * 2)
+
+        bytes.forEach {
+            val i = it.toInt()
+            result.append(HEX_CHARS[i shr 4 and 0x0f])
+            result.append(HEX_CHARS[i and 0x0f])
+        }
+
+        return result.toString()
+
     }
 
     suspend fun updateLastLoginTime(emailId: String, time: DateTime) {
@@ -42,7 +58,7 @@ class UserDao(private val db: DB) {
                 where = { Users.id eq userId },
                 body = {
                     it[this.emailId] = "deactivate-${System.currentTimeMillis()}-$emailId"
-                    it[this.password] = byteArrayOf()
+                    it[this.password] = ""
                     it[this.name] = ""
                     it[this.isDisabled] = true
                 }
@@ -56,7 +72,7 @@ class UserDao(private val db: DB) {
                 where = { Users.emailId eq emailId },
                 body = {
                     it[this.emailId] = "deactivate-${System.currentTimeMillis()}-$emailId"
-                    it[this.password] = byteArrayOf()
+                    it[this.password] = ""
                     it[this.name] = ""
                     it[this.isDisabled] = true
                 }
@@ -73,7 +89,7 @@ class UserDao(private val db: DB) {
     suspend fun isValidCredentials(emailId: String, password: ByteArray): Boolean = db.read {
         Users.slice(Users.password).select {
             Users.isDisabled.eq(false) and Users.emailId.eq(emailId)
-        }.firstOrNull()?.get(Users.password)?.contentEquals(password) == true
+        }.firstOrNull()?.get(Users.password)?.contentEquals(hashPassword(password)) == true
     }
 
     suspend fun getUserInfo(userId: Int): User = db.read {
@@ -96,8 +112,6 @@ class UserDao(private val db: DB) {
     suspend fun getUserId(emailId: String): Int = db.read {
         Users.select {
             Users.emailId.eq(emailId)
-        }.map {
-            it[Users.id].value
-        }.first()
+        }.first()[Users.id].value
     }
 }

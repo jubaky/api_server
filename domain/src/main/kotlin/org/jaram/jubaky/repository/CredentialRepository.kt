@@ -3,7 +3,7 @@ package org.jaram.jubaky.repository
 import org.jaram.jubaky.protocol.CredentialInfo
 
 interface CredentialRepository {
-    suspend fun getCredentialList(): List<CredentialInfo>
+    suspend fun getCredentialList(userId: Int): List<CredentialInfo>
 
     suspend fun createCredential(userName: String, password: String, key: String)
 

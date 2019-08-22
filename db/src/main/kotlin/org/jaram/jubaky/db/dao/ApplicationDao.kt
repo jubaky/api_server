@@ -48,7 +48,7 @@ class ApplicationDao(private val db: DB) {
     suspend fun getUserId(applicationId: Int): Int = db.read {
         Applications.innerJoin(Permissions).innerJoin(Groups).innerJoin(GroupMembers).innerJoin(Users).select {
             Applications.id.eq(applicationId)
-        }.map { it[Users.id].value }.first()
+        }.first()[Users.id].value
     }
 
     suspend fun updateApplicationTime(applicationId: Int, time: DateTime) {

@@ -41,8 +41,10 @@ fun Route.app(
         }
 
         get("/") {
+            val session = call.sessions.get<UserSession>()
+            val userId = userService.getUserId(session?.emailId)
             response(
-                applicationService.getCredentialList()
+                applicationService.getCredentialList(userId)
             )
         }
 

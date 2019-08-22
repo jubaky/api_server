@@ -1,5 +1,6 @@
 package org.jaram.jubaky.db.repository
 
+import org.jaram.jubaky.IncorrectEmailIdOrPasswordException
 import org.jaram.jubaky.db.dao.UserDao
 import org.jaram.jubaky.domain.User
 import org.jaram.jubaky.repository.UserRepository
@@ -21,6 +22,8 @@ class UserRepositoryImpl(
     }
 
     override suspend fun isValidCredentials(emailId: String, password: ByteArray): Boolean {
+        if(!userDao.isDuplicatedEmail(emailId))
+            throw IncorrectEmailIdOrPasswordException()
         return userDao.isValidCredentials(emailId, password)
     }
 

@@ -139,9 +139,7 @@ class BuildDao(private val db: DB) {
     }
 
     suspend fun getCreatorId(buildId: Int): Int = db.read {
-        Builds.select { Builds.id.eq(buildId) }.map {
-            it[Builds.id].value
-        }.first()
+        Builds.innerJoin(Users).select { Builds.id.eq(buildId) }.first()[Users.id].value
     }
 
     suspend fun updateBuildStatus(buildId: Int, status: String, startTime: DateTime, endTime: DateTime) {
