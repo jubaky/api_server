@@ -26,6 +26,8 @@ fun main() {
     commonProperties?.close()
     envProperties?.close()
 
+    println(properties.getProperty("jenkins.url"))
+    println(properties.getProperty("kubernetes.kubeconfig.path"))
 
     val koin = startKoin {
         logger(KoinLogger())

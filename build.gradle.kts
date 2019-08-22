@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "org.jaram"
-version = "1.0-SNAPSHOT"
+version = "0.0.1"
 
 application {
     mainClassName = "org.jaram.jubaky.MainKt"

@@ -31,7 +31,7 @@ class JubakyServer(
     deployService: DeployService
 ) {
 
-    val port = properties.getInt("SERVICE_PORT") ?: 8080
+    val port = properties.getInt("SERVICE_PORT") ?: 5850
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
