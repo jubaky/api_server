@@ -101,11 +101,8 @@ fun Route.app(
 
                 val userId = 1
 
-                val buildId = 1
-                val applicationId = 1
-
                 response(
-                    deployService.getRecentDeployList(userId, buildId, applicationId, topSize, namespace)
+                    deployService.getRecentDeployList(userId, topSize, namespace)
                 )
             }
 
@@ -132,7 +129,7 @@ fun Route.app(
 //                val userId = userService.getUserId(session?.emailId)
 
                 val userId = 1
-                
+
                 response(
                     buildService.getRecentBuildList(
                         userId,

@@ -6,6 +6,7 @@ import org.jaram.jubaky.enumuration.toDeployStatus
 import org.jaram.jubaky.protocol.DeployInfo
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.joda.time.DateTime
 
 class DeployDao(private val db: DB) {
@@ -29,11 +30,16 @@ class DeployDao(private val db: DB) {
         }.empty()
     }
 
-    suspend fun getRecentDeployList(buildId: Int, applicationId: Int, userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
+    suspend fun getRecentDeployList(userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
         if (namespace == null)
             return db.read {
-                Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Templates).innerJoin(Builds).innerJoin(Permissions).select {
-                    Builds.id.eq(buildId) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+                Deploys.join(Builds, JoinType.INNER, additionalConstraint = {Builds.id.eq(Deploys.id)})
+                    .join(Users, JoinType.INNER, additionalConstraint = {Users.id.eq(Deploys.creator)})
+                    .join(Applications, JoinType.INNER, additionalConstraint = {Applications.id.eq(Deploys.application)})
+                    .join(Templates, JoinType.INNER, additionalConstraint = {Templates.id.eq(Deploys.template)})
+                    .join(Permissions, JoinType.INNER, additionalConstraint = {Permissions.application.eq(Deploys.application)})
+                    .select {
+                    Permissions.groupId.eq(userGroupId)
                 }.orderBy(Deploys.createTime to SortOrder.DESC)
                     .limit(count)
                     .map {
@@ -51,8 +57,12 @@ class DeployDao(private val db: DB) {
                     }
             }
         return db.read {
-            Deploys.innerJoin(Users).innerJoin(Applications).innerJoin(Templates).innerJoin(Builds).innerJoin(Permissions).select{
-                Deploys.namespace.eq(namespace) and Builds.id.eq(buildId) and Permissions.application.eq(applicationId) and Permissions.groupId.eq(userGroupId)
+            Deploys.join(Users, JoinType.INNER, additionalConstraint = {Users.id.eq(Deploys.creator)})
+                .join(Applications, JoinType.INNER, additionalConstraint = {Applications.id.eq(Deploys.application)})
+                .join(Templates, JoinType.INNER, additionalConstraint = {Templates.id.eq(Deploys.template)})
+                .join(Permissions, JoinType.INNER, additionalConstraint = {Permissions.application.eq(Deploys.application)})
+                .select{
+                Deploys.namespace.eq(namespace) and Permissions.groupId.eq(userGroupId)
             }.orderBy(Deploys.createTime to SortOrder.DESC).limit(count).map {
                     DeployInfo (
                         id = it[Deploys.id].value,

@@ -17,8 +17,8 @@ class DeployRepositoryImpl(
         return deployDao.checkDeploy(buildId)
     }
 
-    override suspend fun getRecentDeployList(buildId: Int, applicationId: Int, userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
-        return deployDao.getRecentDeployList(buildId, applicationId, userGroupId, count, namespace)
+    override suspend fun getRecentDeployList(userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
+        return deployDao.getRecentDeployList(userGroupId, count, namespace)
     }
 
     override suspend fun getDeployInfoByDeployId(deployId: Int): DeployInfo {

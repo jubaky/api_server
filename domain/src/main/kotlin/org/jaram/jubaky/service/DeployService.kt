@@ -16,11 +16,11 @@ class DeployService(
     private val userRepository: UserRepository
 ) {
 
-    suspend fun getRecentDeployList(userId: Int, buildId: Int, applicationId: Int, count: Int, namespace: String? = null): List<DeployInfo> {
+    suspend fun getRecentDeployList(userId: Int, count: Int, namespace: String? = null): List<DeployInfo> {
         val userInfo = userRepository.getUserInfo(userId)
         val userGroupId = userRepository.getUserGroupId(userInfo.groupName)
 
-        return deployRepository.getRecentDeployList(buildId, applicationId, userGroupId, count, namespace)
+        return deployRepository.getRecentDeployList(userGroupId, count, namespace)
     }
 
     suspend fun getDeployInfo(deployId: Int): DeployInfo {
