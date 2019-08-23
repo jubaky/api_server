@@ -24,8 +24,7 @@ fun Route.user(userService: UserService) {
     post("/login"){
         val emailId: String = bodyParam("email_id")
         val password: ByteArray = bodyParam("password").toByteArray()
-        val name: String = bodyParam("name")
-        val userData: Map<String, String> = userService.loginUser(emailId, password, name)
+        val userData: Map<String, String> = userService.loginUser(emailId, password)
 
         val loginEmailId = userService.getLoginUserEmailId(userData["token"])
 
