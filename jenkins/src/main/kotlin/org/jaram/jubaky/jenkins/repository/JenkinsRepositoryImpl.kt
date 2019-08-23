@@ -519,7 +519,7 @@ class JenkinsRepositoryImpl(
     }
 
     override fun replaceNameWithBranch(prefix: String, branchName: String): String {
-        return "${prefix}_$branchName".replace("/", "_")
+        return "$prefix@$branchName".replace("/", "_")
     }
 
     private fun buildShellCommand(

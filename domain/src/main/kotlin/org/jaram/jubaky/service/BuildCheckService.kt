@@ -43,9 +43,64 @@ class BuildCheckService(
     fun runBuildCheck() {
         buildCheckJob = CoroutineScope(Dispatchers.IO).launch {
             while (true) {
+                val pendingBuildListInJenkins = jenkinsRepository.getPendingBuildList()
+
+                // If new build is in queue, insert to pending queue
+                for (i in 0 until pendingBuildListInJenkins.size) {
+                    val pendingBuildInJenkinsString = pendingBuildListInJenkins[i].split("@")
+
+                    val applicationName = pendingBuildInJenkinsString[0]
+                    val branchName = pendingBuildInJenkinsString[1]
+                    val applicationInfo = applicationRepository.getApplicationInfo(applicationName)
+                    val jobInfo = jobRepository.getJobInfo(applicationInfo.id, branchName)
+                    val recentBuild = buildRepository.getBuildInfo(applicationInfo.id, branchName)
+
+                    var checkIsNewPending = true
+                    for (j in 0 until pendingBuildList.size) {
+                        val pendingBuildBranchedName = jenkinsRepository.replaceNameWithBranch(
+                            pendingBuildList[j].applicationName,
+                            pendingBuildList[j].branch
+                        )
+
+                        if (pendingBuildBranchedName == pendingBuildListInJenkins[i]) {
+                            checkIsNewPending = false
+                        }
+                    }
+
+                    if (checkIsNewPending) {
+                        buildRepository.createBuilds(
+                            branch = branchName,
+                            jobId = jobInfo.id,
+                            tag = recentBuild.tag,
+                            result = "",
+                            status = buildStatusToString(BuildStatus.PENDING),
+                            applicationId = applicationInfo.id,
+                            creatorId = 1,
+                            createTime = DateTime()
+                        )
+
+                        val buildInfo = buildRepository.getBuildInfo(applicationInfo.id, branchName)
+                        val currentBuildNumber = jobInfo.lastBuildNumber + 1
+
+                        pendingBuildList.add(
+                            Build(
+                                buildId = buildInfo.id,
+                                jobId = buildInfo.jobId,
+                                applicationName = applicationName,
+                                branch = branchName,
+                                buildNumber = currentBuildNumber,
+                                status = toBuildStatus("PENDING"),
+                                createTime = System.currentTimeMillis(),
+                                startTime = 0,
+                                endTime = 0,
+                                progressRate = 100.0
+                            )
+                        )
+                    }
+                }
+
                 // Check pending queue
                 val pendingBuildRemovalIdxList = mutableListOf<Int>()
-                val pendingBuildListInJenkins = jenkinsRepository.getPendingBuildList()
                 val pendingBuildListTemp = mutableListOf<Build>()
 
                 for (i in 0 until pendingBuildList.size) {
@@ -136,14 +191,14 @@ class BuildCheckService(
                     )
                 )
 
-//                println(mapOf(
-//                    "abortedBuildList" to abortedBuildList,
-//                    "pendingBuildList" to pendingBuildList,
-//                    "progressBuildList" to progressBuildList,
-//                    "successBuildList" to successBuildList,
-//                    "failureBuildList" to failureBuildList
-//                ))
-//                println(jenkinsRepository.getPendingBuildList())
+                println(mapOf(
+                    "abortedBuildList" to abortedBuildList,
+                    "pendingBuildList" to pendingBuildList,
+                    "progressBuildList" to progressBuildList,
+                    "successBuildList" to successBuildList,
+                    "failureBuildList" to failureBuildList
+                ))
+                println(jenkinsRepository.getPendingBuildList())
 
                 abortedBuildList.clear()
                 successBuildList.clear()
