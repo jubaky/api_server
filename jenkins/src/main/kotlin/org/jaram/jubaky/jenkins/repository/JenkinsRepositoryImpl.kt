@@ -37,7 +37,7 @@ import javax.xml.transform.stream.StreamResult
 class JenkinsRepositoryImpl(
     private val applicationRepository: ApplicationRepository,
     private val buildRepository: BuildRepository,
-    private val jobRepository: JobRepository,`
+    private val jobRepository: JobRepository,
     private val jenkinsClientWithJson: JenkinsClientWithJson,
     private val jenkinsClientWithText: JenkinsClientWithText,
     private val buildCheckService: BuildCheckService,
