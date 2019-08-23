@@ -82,6 +82,12 @@ class BuildCheckService(
                         val buildInfo = buildRepository.getBuildInfo(applicationInfo.id, branchName)
                         val currentBuildNumber = jobInfo.lastBuildNumber + 1
 
+                        jobRepository.updateJob(
+                            applicationId = applicationInfo.id,
+                            branch = branchName,
+                            lastBuildNumber = currentBuildNumber
+                        )
+
                         pendingBuildList.add(
                             Build(
                                 buildId = buildInfo.id,

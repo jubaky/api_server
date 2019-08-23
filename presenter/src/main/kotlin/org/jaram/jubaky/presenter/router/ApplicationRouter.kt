@@ -27,8 +27,10 @@ fun Route.app(
 
     route("/credentials") {
         post("/") {
-            val session = call.sessions.get<UserSession>()
-            val userId = userService.getUserId(session?.emailId)
+//            val session = call.sessions.get<UserSession>()
+//            val userId = userService.getUserId(session?.emailId)
+
+            val userId = 1
 
             val credentials = Credentials(
                 username = bodyParam("username"),
@@ -45,8 +47,10 @@ fun Route.app(
         }
 
         get("/") {
-            val session = call.sessions.get<UserSession>()
-            val userId = userService.getUserId(session?.emailId)
+//            val session = call.sessions.get<UserSession>()
+//            val userId = userService.getUserId(session?.emailId)
+
+            val userId = 1
 
             response(
                 applicationService.getCredentialList(userId)
@@ -72,8 +76,10 @@ fun Route.app(
                 val applicationId = pathParam("applicationId").toInt()
                 val topSize = queryParamSafe("top")?.toIntOrNull() ?: 10
 
-                val session = call.sessions.get<UserSession>()
-                val userId = userService.getUserId(session?.emailId)
+//                val session = call.sessions.get<UserSession>()
+//                val userId = userService.getUserId(session?.emailId)
+
+                val userId = 1
 
                 response(
                     buildService.getRecentBuildList(userId, applicationId, topSize)
@@ -90,8 +96,10 @@ fun Route.app(
                 val topSize = queryParamSafe("top")?.toIntOrNull() ?: 10
                 val namespace = queryParamSafe("namespace")
 
-                val session = call.sessions.get<UserSession>()
-                val userId = userService.getUserId(session?.emailId)
+//                val session = call.sessions.get<UserSession>()
+//                val userId = userService.getUserId(session?.emailId)
+
+                val userId = 1
 
                 val buildId = 1
                 val applicationId = 1
@@ -120,9 +128,11 @@ fun Route.app(
             }
 
             get("/build") {
-                val session = call.sessions.get<UserSession>()
-                val userId = userService.getUserId(session?.emailId)
+//                val session = call.sessions.get<UserSession>()
+//                val userId = userService.getUserId(session?.emailId)
 
+                val userId = 1
+                
                 response(
                     buildService.getRecentBuildList(
                         userId,
