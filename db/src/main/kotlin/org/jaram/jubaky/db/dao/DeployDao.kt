@@ -33,11 +33,12 @@ class DeployDao(private val db: DB) {
     suspend fun getRecentDeployList(userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
         if (namespace == null)
             return db.read {
-                Deploys.join(Builds, JoinType.INNER, additionalConstraint = {Builds.id.eq(Deploys.id)})
+                Deploys.join(Builds, JoinType.INNER, additionalConstraint = {Builds.id.eq(Deploys.build)})
                     .join(Users, JoinType.INNER, additionalConstraint = {Users.id.eq(Deploys.creator)})
                     .join(Applications, JoinType.INNER, additionalConstraint = {Applications.id.eq(Deploys.application)})
                     .join(Templates, JoinType.INNER, additionalConstraint = {Templates.id.eq(Deploys.template)})
                     .join(Permissions, JoinType.INNER, additionalConstraint = {Permissions.application.eq(Deploys.application)})
+                    .slice(Deploys.id, Applications.name, Builds.id, Builds.branch, Deploys.namespace, Templates.name, Users.name, Deploys.createTime, Deploys.status)
                     .select {
                     Permissions.groupId.eq(userGroupId)
                 }.orderBy(Deploys.createTime to SortOrder.DESC)
@@ -57,10 +58,12 @@ class DeployDao(private val db: DB) {
                     }
             }
         return db.read {
-            Deploys.join(Users, JoinType.INNER, additionalConstraint = {Users.id.eq(Deploys.creator)})
+            Deploys.join(Builds, JoinType.INNER, additionalConstraint = {Builds.id.eq(Deploys.build)})
+                .join(Users, JoinType.INNER, additionalConstraint = {Users.id.eq(Deploys.creator)})
                 .join(Applications, JoinType.INNER, additionalConstraint = {Applications.id.eq(Deploys.application)})
                 .join(Templates, JoinType.INNER, additionalConstraint = {Templates.id.eq(Deploys.template)})
                 .join(Permissions, JoinType.INNER, additionalConstraint = {Permissions.application.eq(Deploys.application)})
+                .slice(Deploys.id, Applications.name, Builds.id, Builds.branch, Deploys.namespace, Templates.name, Users.name, Deploys.createTime, Deploys.status)
                 .select{
                 Deploys.namespace.eq(namespace) and Permissions.groupId.eq(userGroupId)
             }.orderBy(Deploys.createTime to SortOrder.DESC).limit(count).map {
