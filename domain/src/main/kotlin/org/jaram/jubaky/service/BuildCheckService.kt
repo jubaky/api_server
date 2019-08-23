@@ -137,13 +137,9 @@ class BuildCheckService(
                 pendingBuildRemovalIdxList.forEach { idx -> pendingBuildList.removeAt(idx) }
 
                 pendingBuildList.forEach { build -> updateBuildStatus(build) }
-                TimeUnit.MILLISECONDS.sleep(200)
-
-                TimeUnit.MILLISECONDS.sleep(intervalDelayTime.toLong())
 
                 // Check build queue
                 progressBuildList.forEach { build -> updateBuildStatus(build) }
-                TimeUnit.MILLISECONDS.sleep(200)
 
                 val progressBuildListTemp = mutableListOf<Build>()
                 val progressBuildIdxList = mutableListOf<Int>()
@@ -177,11 +173,8 @@ class BuildCheckService(
 
                 // Update data to DB
                 abortedBuildList.forEach { build -> updateBuildStatus(build) } // Update Status
-                TimeUnit.MILLISECONDS.sleep(200)
                 successBuildList.forEach { build -> updateBuildStatus(build) }
-                TimeUnit.MILLISECONDS.sleep(200)
                 failureBuildList.forEach { build -> updateBuildStatus(build) }
-                TimeUnit.MILLISECONDS.sleep(200)
 
                 /**
                  * @TODO
