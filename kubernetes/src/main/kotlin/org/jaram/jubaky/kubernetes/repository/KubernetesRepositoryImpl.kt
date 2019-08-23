@@ -94,10 +94,6 @@ class KubernetesRepositoryImpl(
     override suspend fun replaceDeployment(deployInfo: DeployInfo): Deployment = withContext(Dispatchers.IO) {
         val template = templateRepository.getTemplateInfo(deployInfo.applicationName)
 
-        println(deployInfo)
-        println(template)
-        println(template.yaml)
-
         val deployment = api.replaceDeployment(
             deployInfo.applicationName,
             deployInfo.namespace,

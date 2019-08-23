@@ -197,14 +197,14 @@ class BuildCheckService(
                     )
                 )
 
-                println(mapOf(
-                    "abortedBuildList" to abortedBuildList,
-                    "pendingBuildList" to pendingBuildList,
-                    "progressBuildList" to progressBuildList,
-                    "successBuildList" to successBuildList,
-                    "failureBuildList" to failureBuildList
-                ))
-                println(jenkinsRepository.getPendingBuildList())
+//                println(mapOf(
+//                    "abortedBuildList" to abortedBuildList,
+//                    "pendingBuildList" to pendingBuildList,
+//                    "progressBuildList" to progressBuildList,
+//                    "successBuildList" to successBuildList,
+//                    "failureBuildList" to failureBuildList
+//                ))
+//                println(jenkinsRepository.getPendingBuildList())
 
                 abortedBuildList.clear()
                 successBuildList.clear()
