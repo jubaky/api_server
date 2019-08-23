@@ -54,7 +54,6 @@ class BuildCheckService(
 
                     val applicationInfo = applicationRepository.getApplicationInfo(applicationName)
                     val jobInfo = jobRepository.getJobInfo(applicationInfo.id, branchName)
-                    val recentBuild = buildRepository.getBuildInfo(applicationInfo.id, branchName)
 
                     var checkIsNewPending = true
                     for (j in 0 until pendingBuildList.size) {
@@ -72,7 +71,7 @@ class BuildCheckService(
                         buildRepository.createBuilds(
                             branch = branchName,
                             jobId = jobInfo.id,
-                            tag = recentBuild.tag,
+                            tag = jobInfo.tag,
                             result = "",
                             status = buildStatusToString(BuildStatus.PENDING),
                             applicationId = applicationInfo.id,
