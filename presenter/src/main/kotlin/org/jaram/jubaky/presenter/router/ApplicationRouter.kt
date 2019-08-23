@@ -27,6 +27,9 @@ fun Route.app(
 
     route("/credentials") {
         post("/") {
+            val session = call.sessions.get<UserSession>()
+            val userId = userService.getUserId(session?.emailId)
+
             val credentials = Credentials(
                 username = bodyParam("username"),
                 password = bodyParam("password"),
@@ -35,14 +38,16 @@ fun Route.app(
                 scope = bodyParam("scope", "GLOBAL")
             )
 
+
             response(
-                applicationService.createCredentials(credentials)
+                applicationService.createCredentials(userId, credentials)
             )
         }
 
         get("/") {
             val session = call.sessions.get<UserSession>()
             val userId = userService.getUserId(session?.emailId)
+
             response(
                 applicationService.getCredentialList(userId)
             )

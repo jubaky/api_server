@@ -16,7 +16,8 @@ fun Route.user(userService: UserService) {
             userService.registerUser(
                 bodyParam("email_id"),
                 bodyParam("password").toByteArray(),
-                bodyParam("name")
+                bodyParam("name"),
+                bodyParam("group_name")
             )
         )
     }

@@ -5,6 +5,7 @@ import org.jaram.jubaky.db.table.GroupMembers
 import org.jaram.jubaky.db.table.Groups
 import org.jaram.jubaky.db.table.Users
 import org.jaram.jubaky.domain.User
+import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
@@ -113,5 +114,14 @@ class UserDao(private val db: DB) {
         Users.select {
             Users.emailId.eq(emailId)
         }.first()[Users.id].value
+    }
+
+    suspend fun registerGroupMember(groupId: Int, userId: Int) {
+        db.execute{
+            GroupMembers.insert {
+                it[this.groupId] = EntityID(groupId, Groups)
+                it[this.userId] = EntityID(userId, Users)
+            }
+        }
     }
 }

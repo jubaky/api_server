@@ -46,4 +46,8 @@ class UserRepositoryImpl(
     override suspend fun getUserId(emailId: String): Int {
         return userDao.getUserId(emailId)
     }
+
+    override suspend fun registerGroupMember(groupId: Int, userId: Int) {
+        userDao.registerGroupMember(groupId, userId)
+    }
 }

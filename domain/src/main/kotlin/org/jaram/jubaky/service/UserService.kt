@@ -12,12 +12,17 @@ class UserService(
     private val tokenService: TokenService
 ) {
 
-    suspend fun registerUser(emailId: String, password: ByteArray, name: String) {
+    suspend fun registerUser(emailId: String, password: ByteArray, name: String, groupName: String) {
         if (userRepository.isDuplicatedEmail(emailId)) {
             throw AlreadyExistedUserException()
         }
 
         userRepository.registerUser(emailId, password, name)
+
+        val userId = userRepository.getUserId(emailId)
+        val groupId = userRepository.getUserGroupId(groupName)
+
+        userRepository.registerGroupMember(groupId, userId)
     }
 
     suspend fun deleteUser(userId: Int) {

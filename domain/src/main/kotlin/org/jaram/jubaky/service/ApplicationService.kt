@@ -28,10 +28,11 @@ class ApplicationService(
         return credentialRepository.getCredentialList(userId)
     }
 
-    suspend fun createCredentials(credentials: Credentials) {
+    suspend fun createCredentials(userId: Int, credentials: Credentials) {
         jenkinsRepository.createCredentials(credentials)
 
         return credentialRepository.createCredential(
+            userId = userId,
             userName = credentials.username,
             password = credentials.password,
             key = credentials.key

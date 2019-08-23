@@ -31,7 +31,7 @@ CREATE TABLE `Groups`(
 CREATE TABLE Users(
     id INT AUTO_INCREMENT,
     email_id VARCHAR(256) UNIQUE NOT NULL,
-    password INT NOT NULL,
+    password VARCHAR(128) NOT NULL,
     name VARCHAR(30) NOT NULL,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     last_login_time DATETIME,
@@ -127,11 +127,11 @@ CREATE TABLE Deploys(
 
 CREATE TABLE Credentials(
     id INT AUTO_INCREMENT,
---     user INT,
+    user_id INT,
     user_name VARCHAR(30) NOT NULL,
     password VARCHAR(128) NOT NULL,
     `key` VARCHAR(256) NOT NULL,
 
---     FOREIGN KEY (user) REFERENCES Users(id)
+    FOREIGN KEY (user_id) REFERENCES Users(id),
     PRIMARY KEY (id)
 );

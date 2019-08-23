@@ -22,4 +22,6 @@ interface UserRepository {
     suspend fun getUserGroupId(groupName: String): Int
 
     suspend fun getUserId(emailId: String): Int
+
+    suspend fun registerGroupMember(groupId: Int, userId: Int)
 }
