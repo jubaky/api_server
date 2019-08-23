@@ -25,6 +25,12 @@ class BuildDao(private val db: DB) {
         }
     }
 
+    suspend fun checkBuild(applicationId: Int, branchName: String): Boolean = db.read {
+        !Builds.select {
+            Builds.application.eq(applicationId) and Builds.branch.eq(branchName)
+        }.empty()
+    }
+
     suspend fun getRecentBuildList(applicationId: Int, userGroupId: Int, count: Int, branch: String?): List<BuildInfo> {
         if (branch == null)
             return db.read {

@@ -43,9 +43,70 @@ class BuildCheckService(
     fun runBuildCheck() {
         buildCheckJob = CoroutineScope(Dispatchers.IO).launch {
             while (true) {
+                val pendingBuildListInJenkins = jenkinsRepository.getPendingBuildList()
+
+                // If new build is in queue, insert to pending queue
+                for (i in 0 until pendingBuildListInJenkins.size) {
+                    val pendingBuildInJenkinsString = pendingBuildListInJenkins[i].split("0branch0")
+
+                    val applicationName = pendingBuildInJenkinsString[0]
+                    val branchName = pendingBuildInJenkinsString[1].replace("_", "/")
+
+                    val applicationInfo = applicationRepository.getApplicationInfo(applicationName)
+                    val jobInfo = jobRepository.getJobInfo(applicationInfo.id, branchName)
+
+                    var checkIsNewPending = true
+                    for (j in 0 until pendingBuildList.size) {
+                        val pendingBuildBranchedName = jenkinsRepository.replaceNameWithBranch(
+                            pendingBuildList[j].applicationName,
+                            pendingBuildList[j].branch
+                        )
+
+                        if (pendingBuildBranchedName == pendingBuildListInJenkins[i]) {
+                            checkIsNewPending = false
+                        }
+                    }
+
+                    if (checkIsNewPending) {
+                        buildRepository.createBuilds(
+                            branch = branchName,
+                            jobId = jobInfo.id,
+                            tag = jobInfo.tag,
+                            result = "",
+                            status = buildStatusToString(BuildStatus.PENDING),
+                            applicationId = applicationInfo.id,
+                            creatorId = 1,
+                            createTime = DateTime()
+                        )
+
+                        val buildInfo = buildRepository.getBuildInfo(applicationInfo.id, branchName)
+                        val currentBuildNumber = jobInfo.lastBuildNumber + 1
+
+                        jobRepository.updateJob(
+                            applicationId = applicationInfo.id,
+                            branch = branchName,
+                            lastBuildNumber = currentBuildNumber
+                        )
+
+                        pendingBuildList.add(
+                            Build(
+                                buildId = buildInfo.id,
+                                jobId = buildInfo.jobId,
+                                applicationName = applicationName,
+                                branch = branchName,
+                                buildNumber = currentBuildNumber,
+                                status = toBuildStatus("PENDING"),
+                                createTime = System.currentTimeMillis(),
+                                startTime = 0,
+                                endTime = 0,
+                                progressRate = 100.0
+                            )
+                        )
+                    }
+                }
+
                 // Check pending queue
                 val pendingBuildRemovalIdxList = mutableListOf<Int>()
-                val pendingBuildListInJenkins = jenkinsRepository.getPendingBuildList()
                 val pendingBuildListTemp = mutableListOf<Build>()
 
                 for (i in 0 until pendingBuildList.size) {

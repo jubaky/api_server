@@ -27,9 +27,9 @@ fun Route.user(userService: UserService) {
         val password: ByteArray = bodyParam("password").toByteArray()
         val userData: Map<String, String> = userService.loginUser(emailId, password)
 
-        val loginEmailId = userService.getLoginUserEmailId(userData["token"])
-
-        call.sessions.set(UserSession(emailId = loginEmailId))
+//        val loginEmailId = userService.getLoginUserEmailId(userData["token"])
+//
+//        call.sessions.set(UserSession(emailId = loginEmailId))
 
         val responseUserData = mapOf("email_id" to userData["emailId"], "name" to userData["name"], "token" to userData["token"])
 

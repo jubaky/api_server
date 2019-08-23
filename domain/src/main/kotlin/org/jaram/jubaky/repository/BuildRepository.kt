@@ -6,6 +6,8 @@ import org.joda.time.DateTime
 interface BuildRepository {
     suspend fun createBuilds(branch: String, jobId: Int, tag: String, result: String?, status: String, applicationId: Int, creatorId: Int, createTime: DateTime)
 
+    suspend fun checkBuild(applicationId: Int, branchName: String): Boolean
+
     suspend fun getRecentBuildList(applicationId: Int, userGroupId: Int, count: Int, branch: String?): List<BuildInfo>
 
     suspend fun getBuildInfo(buildId: Int): BuildInfo
