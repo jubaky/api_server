@@ -9,7 +9,7 @@ interface DeployRepository {
 
     suspend fun checkDeploy(buildId: Int): Boolean
 
-    suspend fun getRecentDeployList(userGroupId: Int, count: Int, namespace: String?): List<DeployInfo>
+    suspend fun getRecentDeployList(applicationId: Int, userGroupId: Int, count: Int, namespace: String?): List<DeployInfo>
 
     suspend fun getDeployInfoByDeployId(deployId: Int): DeployInfo
 

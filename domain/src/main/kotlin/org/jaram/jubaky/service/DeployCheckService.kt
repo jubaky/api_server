@@ -99,11 +99,11 @@ class DeployCheckService(
                     )
                 )
 
-                println(mapOf(
-                    "progressDeployList" to progressDeployList,
-                    "successDeployList" to successDeployList,
-                    "failureDeployList" to failureDeployList
-                ))
+//                println(mapOf(
+//                    "progressDeployList" to progressDeployList,
+//                    "successDeployList" to successDeployList,
+//                    "failureDeployList" to failureDeployList
+//                ))
 
                 successDeployList.clear()
                 failureDeployList.clear()

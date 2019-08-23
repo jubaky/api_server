@@ -93,6 +93,7 @@ fun Route.app(
 
         route("/deploy") {
             get {
+                val applicationId = pathParam("applicationId").toInt()
                 val topSize = queryParamSafe("top")?.toIntOrNull() ?: 10
                 val namespace = queryParamSafe("namespace")
 
@@ -102,7 +103,7 @@ fun Route.app(
                 val userId = 1
 
                 response(
-                    deployService.getRecentDeployList(userId, topSize, namespace)
+                    deployService.getRecentDeployList(userId, applicationId, topSize, namespace)
                 )
             }
 

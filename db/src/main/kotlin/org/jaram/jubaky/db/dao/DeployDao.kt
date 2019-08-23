@@ -30,7 +30,7 @@ class DeployDao(private val db: DB) {
         }.empty()
     }
 
-    suspend fun getRecentDeployList(userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
+    suspend fun getRecentDeployList(applicationId: Int, userGroupId: Int, count: Int, namespace: String?): List<DeployInfo> {
         if (namespace == null)
             return db.read {
                 Deploys.join(Builds, JoinType.INNER, additionalConstraint = {Builds.id.eq(Deploys.build)})
@@ -40,7 +40,7 @@ class DeployDao(private val db: DB) {
                     .join(Permissions, JoinType.INNER, additionalConstraint = {Permissions.application.eq(Deploys.application)})
                     .slice(Deploys.id, Applications.name, Builds.id, Builds.branch, Deploys.namespace, Templates.name, Users.name, Deploys.createTime, Deploys.status)
                     .select {
-                    Permissions.groupId.eq(userGroupId)
+                    Permissions.groupId.eq(userGroupId) and Applications.id.eq(applicationId)
                 }.orderBy(Deploys.createTime to SortOrder.DESC)
                     .limit(count)
                     .map {
@@ -65,7 +65,7 @@ class DeployDao(private val db: DB) {
                 .join(Permissions, JoinType.INNER, additionalConstraint = {Permissions.application.eq(Deploys.application)})
                 .slice(Deploys.id, Applications.name, Builds.id, Builds.branch, Deploys.namespace, Templates.name, Users.name, Deploys.createTime, Deploys.status)
                 .select{
-                Deploys.namespace.eq(namespace) and Permissions.groupId.eq(userGroupId)
+                Deploys.namespace.eq(namespace) and Permissions.groupId.eq(userGroupId) and Applications.id.eq(applicationId)
             }.orderBy(Deploys.createTime to SortOrder.DESC).limit(count).map {
                     DeployInfo (
                         id = it[Deploys.id].value,
