@@ -47,7 +47,7 @@ class BuildCheckService(
 
                 // If new build is in queue, insert to pending queue
                 for (i in 0 until pendingBuildListInJenkins.size) {
-                    val pendingBuildInJenkinsString = pendingBuildListInJenkins[i].split("@")
+                    val pendingBuildInJenkinsString = pendingBuildListInJenkins[i].split("=")
 
                     val applicationName = pendingBuildInJenkinsString[0]
                     val branchName = pendingBuildInJenkinsString[1]
