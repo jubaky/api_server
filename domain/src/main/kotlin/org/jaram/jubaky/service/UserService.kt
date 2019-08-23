@@ -32,16 +32,17 @@ class UserService(
         userRepository.deleteUser(emailId)
     }
 
-    suspend fun loginUser(emailId: String, password: ByteArray, name: String): Map<String, String> {
+    suspend fun loginUser(emailId: String, password: ByteArray): Map<String, String> {
         if (!userRepository.isValidCredentials(emailId, password)) {
             throw IncorrectEmailIdOrPasswordException()
         }
 
         userRepository.updateLastLoginTime(emailId, DateTime.now())
+        val userId = getUserId(emailId)
+        val userInfo = userRepository.getUserInfo(userId)
+        val token = tokenService.createToken(emailId, userInfo.name)
 
-        val token = tokenService.createToken(emailId, name)
-
-        return mapOf("emailId" to emailId, "name" to name, "token" to token)
+        return mapOf("emailId" to emailId, "name" to userInfo.name, "token" to token)
     }
 
     fun getLoginUserEmailId(token: String?) = JWT.decode(token).getClaim("emailId").asString()
