@@ -50,7 +50,8 @@ class BuildCheckService(
                     val pendingBuildInJenkinsString = pendingBuildListInJenkins[i].split("0branch0")
 
                     val applicationName = pendingBuildInJenkinsString[0]
-                    val branchName = pendingBuildInJenkinsString[1]
+                    val branchName = pendingBuildInJenkinsString[1].replace("_", "/")
+
                     val applicationInfo = applicationRepository.getApplicationInfo(applicationName)
                     val jobInfo = jobRepository.getJobInfo(applicationInfo.id, branchName)
                     val recentBuild = buildRepository.getBuildInfo(applicationInfo.id, branchName)
