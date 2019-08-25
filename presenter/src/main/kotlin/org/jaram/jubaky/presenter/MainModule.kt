@@ -1,25 +1,40 @@
 package org.jaram.jubaky.presenter
 
+import com.auth0.jwt.JWTVerifier
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.auth.Authentication
+import io.ktor.auth.jwt.JWTPrincipal
+import io.ktor.auth.jwt.jwt
 import io.ktor.features.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.acceptLanguage
 import io.ktor.request.path
 import io.ktor.response.respond
+import io.ktor.sessions.Sessions
+import io.ktor.sessions.cookie
 import org.jaram.jubaky.ApiException
 import org.jaram.jubaky.UnhandledException
+import org.jaram.jubaky.domain.session.UserSession
 import org.jaram.jubaky.presenter.converter.ResponseConverter
 import org.jaram.jubaky.util.Jackson
+import org.jaram.jubaky.service.TokenService
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.util.*
 
-fun Application.serverModule() {
+private val jwtRealm: String = "jubaky app"
+private val jwtAudience: String = "jubaky-audience"
+
+fun Application.serverModule(
+    tokenService: TokenService
+) {
 
     val errorLogger = LoggerFactory.getLogger("kr.co.coinone.ErrorLogger")
+
+    val jwtVerifier: JWTVerifier = tokenService.getJWTVerifier()
 
     install(XForwardedHeaderSupport)
 
@@ -28,6 +43,10 @@ fun Application.serverModule() {
 
         mdc("path") { it.request.path() }
         mdc("clientIp") { it.request.origin.remoteHost }
+    }
+
+    install(CORS) {
+        anyHost()
     }
 
     install(AutoHeadResponse)
@@ -72,5 +91,20 @@ fun Application.serverModule() {
 
             call.respond(HttpStatusCode.fromValue(it.httpStatus), it.toResponse(locale))
         }
+    }
+
+    // JWT Authentication Provider
+    install(Authentication) {
+        jwt(name = "jwtAuth") {
+            realm = jwtRealm
+            verifier(jwtVerifier)
+            validate { credential ->
+                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
+            }
+        }
+    }
+
+    install(Sessions) {
+        cookie<UserSession>("User")
     }
 }

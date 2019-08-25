@@ -1,4 +1,4 @@
-package org.jaram.jubaky.domain
+package org.jaram.jubaky.domain.jenkins
 
 data class Pipeline(
     val id: Int,

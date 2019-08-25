@@ -1,11 +1,16 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    application
     kotlin("jvm") version "1.3.41"
 }
 
 group = "org.jaram"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClassName = "org.jaram.jubaky.MainKt"
+}
 
 allprojects {
     repositories {
@@ -35,6 +40,8 @@ subprojects {
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+")
 
         implementation("joda-time:joda-time:2.10.3")
+
+        implementation("com.google.guava:guava:28.0-jre")
     }
 
     tasks.withType<KotlinCompile> {
@@ -42,19 +49,8 @@ subprojects {
     }
 }
 
-val childJars by configurations.creating
-
 dependencies {
     subprojects.forEach {
-        childJars(project(it.path))
+        implementation(project(it.path))
     }
-}
-
-tasks.withType<Jar> {
-    archiveFileName.set("jubaky.jar")
-    manifest {
-        attributes["Main-Class"] = "org.jaram.jubaky.MainKt"
-    }
-    dependsOn(childJars)
-    from(childJars.map { if (it.isDirectory) it else zipTree(it) })
 }

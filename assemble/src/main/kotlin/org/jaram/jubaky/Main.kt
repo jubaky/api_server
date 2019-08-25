@@ -27,7 +27,7 @@ fun main() {
     envProperties?.close()
 
 
-    startKoin {
+    val koin = startKoin {
         logger(KoinLogger())
         koin.propertyRegistry.saveProperties(properties)
         modules(module {
@@ -45,6 +45,9 @@ fun main() {
             )
         )
     }.koin
-        .get<JubakyServer>()
+
+    koin.get<JubakyServer>()
         .start()
+
+//    koin.get<DataSource>(named("jubaky-db")).connection.prepareStatement("").execute()
 }

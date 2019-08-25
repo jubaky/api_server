@@ -50,10 +50,22 @@ suspend fun PipelineContext<*, ApplicationCall>.bodyParam(key: String, default: 
     return bodyParamSafe(key, default) ?: throw MissingParameterException("required $key")
 }
 
+suspend fun PipelineContext<*, ApplicationCall>.bodyParamListSafe(key: String, default: List<String?> = listOf()): List<String?> {
+    return bodyParam()?.getAll(key) ?: default
+}
+
+suspend fun PipelineContext<*, ApplicationCall>.bodyParamList(key: String, default: List<String?> = listOf()): List<String?> {
+    if (bodyParamListSafe(key, default).isNotEmpty()) {
+        return bodyParamListSafe(key, default)
+    } else {
+        throw MissingParameterException("required $key")
+    }
+}
+
 suspend fun PipelineContext<*, ApplicationCall>.response(value: Any?) {
     if (value == null || value is Unit) {
         context.respond(BaseResponse<Any>())
+    } else {
+        context.respond(value)
     }
-
-    context.respond(value!!)
 }
